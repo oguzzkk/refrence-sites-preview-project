@@ -125,12 +125,11 @@ Manual trigger: Actions tab → "Backup npoint data" → "Run workflow".
 
 ## Known Debt
 
-1. **Broken hub links** — `index.html` references `references.html`, `mockup.html`, `design-reference.html`, `build-plan.html`. None exist in repo. Either commit them or point the hub directly at `Womens_Wear_Reference_Sites.html`.
-2. **Repo name typo** — "refrence" should be "reference". Renaming breaks the GitHub Pages URL (which is not auto-redirected). A custom domain would make future renames painless.
-3. **Duplicate brands** — `kfrancestudio.com` and `fashionnova.com` appear twice each. Since favorites use brand text as a unique key, only one of each can be favorited; the dup should be removed.
-4. **Race condition (rare)** — Two simultaneous writes lose one update. The 15s polling makes this rare in practice.
-5. **GitHub Pages cache** — Up to 10 min stale after push. Use `?v=YYYYMMDD` query to bypass for testing.
-6. **npoint.io rate limits** — Free tier has undocumented limits; avoid hammering with POST loops.
+1. **Repo name typo** — "refrence" should be "reference". Renaming breaks the GitHub Pages URL (which is not auto-redirected). A custom domain would make future renames painless.
+2. **Duplicate brands** — `kfrancestudio.com` and `fashionnova.com` appear twice each. Since favorites use brand text as a unique key, only one of each can be favorited; the dup should be removed.
+3. **Race condition (rare)** — Two simultaneous writes lose one update. The 15s polling makes this rare in practice.
+4. **GitHub Pages cache** — Up to 10 min stale after push. Use `?v=YYYYMMDD` query to bypass for testing.
+5. **npoint.io rate limits** — Free tier has undocumented limits; avoid hammering with POST loops.
 
 ## Edit Checklist
 
