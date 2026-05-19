@@ -1943,7 +1943,7 @@ function initHearts() {
     };
     card.appendChild(btn);
 
-    // Add note textarea (manual save via button — no auto-save while typing)
+    // Add note textarea — manual Kaydet button + 3s idle auto-save fallback
     const noteWrap = document.createElement('div');
     noteWrap.className = 'fav-note-wrap';
     const noteArea = document.createElement('textarea');
@@ -1956,18 +1956,27 @@ function initHearts() {
     const saveBtn = document.createElement('button');
     saveBtn.className = 'fav-note-save';
     saveBtn.textContent = 'Kaydet';
-    saveBtn.onclick = function(e) {
-      e.preventDefault();
-      e.stopPropagation();
+
+    // Shared commit function — writes textarea to favorites obj + bumps ts + POSTs
+    let noteTimer = null;
+    function commitNote() {
+      clearTimeout(noteTimer);
       if (favorites[brand]) {
         if (typeof favorites[brand] === 'object') {
           favorites[brand].note = noteArea.value;
+          favorites[brand].ts = Date.now();
         } else {
-          favorites[brand] = { ts: favorites[brand], note: noteArea.value };
+          favorites[brand] = { ts: Date.now(), note: noteArea.value };
         }
       }
       saveBtn.classList.remove('pending');
       saveFavorites();
+    }
+
+    saveBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      commitNote();
     };
 
     noteArea.oninput = function(e) {
@@ -1975,8 +1984,11 @@ function initHearts() {
       // Auto-grow textarea
       this.style.height = 'auto';
       this.style.height = this.scrollHeight + 'px';
-      // Mark as unsaved
+      // Mark as unsaved (red outline on button)
       saveBtn.classList.add('pending');
+      // Failsafe: if user idles 3s, commit silently in the background
+      clearTimeout(noteTimer);
+      noteTimer = setTimeout(commitNote, 3000);
     };
 
     const savedLabel = document.createElement('span');

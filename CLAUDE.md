@@ -91,7 +91,7 @@ The page's `saveFavorites()` does this correctly by keeping the in-memory `favor
 
 | Function | Role | Caveat |
 |---|---|---|
-| `initHearts()` | On DOMContentLoaded, injects heart/note/save-button/trash buttons into every card | Brand key = `.brand` element's text — duplicate brand names will collide. **Notes are saved manually via the Kaydet (Save) button**, not on every keystroke. The button adds a `.pending` class while text is unsaved. |
+| `initHearts()` | On DOMContentLoaded, injects heart/note/save-button/trash buttons into every card | Brand key = `.brand` element's text — duplicate brand names will collide. **Notes use a hybrid save model**: typing marks the Kaydet button `.pending` (red outline) and triggers a **3-second idle auto-save fallback** so a closed tab doesn't lose unsaved text. Clicking Kaydet commits immediately and cancels the pending timer. Both paths bump `favorites[brand].ts = Date.now()`. |
 | `toggleFav(brand)` | Toggle favorite, restores note from trash if present | Adds/removes `is-fav` class |
 | `toggleTrash(brand)` | Toggle trash, preserves favorite note for later restore | Auto-removes from favorites if present |
 | `filterCards(tag)` | Category filter. **Uses `event.target`.** | Will fail when called programmatically — use `reapplyFilter()` |
