@@ -25,6 +25,9 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 
 /* Cards */
 .site-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+/* Defensive: hide unexpected grid children and span the help note across all columns */
+.site-grid > *:not(.site-card):not(.note) { display: none; }
+.site-grid > .note { grid-column: 1 / -1; }
 .site-card {
   border: 1px solid #eee; padding: 16px 18px; transition: 0.3s; cursor: pointer;
   text-decoration: none; color: inherit; display: block; position: relative;
