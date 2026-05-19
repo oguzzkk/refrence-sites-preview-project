@@ -9,6 +9,11 @@
 - **Purpose:** Two-user shared research tool for women's fashion e-commerce sites. Filterable card grid + favorites + notes + trash, synced via a public JSON store.
 - **Live:** https://oguzzkk.github.io/refrence-sites-preview-project/Womens_Wear_Reference_Sites.html
 
+## Companion Docs
+
+- **Adding sites, adding tags, card HTML template, tag color table** → [CONTRIBUTING.md](./CONTRIBUTING.md). Read this before editing the card list.
+- **Public-facing intro** → [README.md](./README.md) (minimal vitrine, links back here).
+
 ## Repo Layout
 
 ```
