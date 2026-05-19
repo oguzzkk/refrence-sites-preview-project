@@ -1755,15 +1755,69 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 </div>
 
 <script>
-// ===== SHARED FAVORITES SYSTEM =====
-// npoint.io ile ücretsiz paylaşımlı depolama
-// Favoriler ve notlar otomatik senkronize olur
+// ===== SHARED FAVORITES SYSTEM — GitHub Contents API =====
+// Storage: data/favorites.json + data/trash.json in this repo, written via
+// GitHub Contents API (PUT with SHA-based concurrent-update protection).
+// Every edit becomes a git commit — full version history, restore via UI.
+// Token scope is fine-grained to THIS repo only (no other repos, no gists,
+// no account). Worst-case leak: sham commit, fix via git revert.
 
-const API_URL = 'https://api.npoint.io/9f430671be24a9b78c70';
-const TRASH_API_URL = 'https://api.npoint.io/8058a715b26b78972bd2';
+const REPO_OWNER = 'oguzzkk';
+const REPO_NAME  = 'refrence-sites-preview-project';
+const BRANCH     = 'main';
+const FAV_PATH   = 'data/favorites.json';
+const TRASH_PATH = 'data/trash.json';
+const GH_TOKEN   = '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';
+const API_BASE   = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
+
 let favorites = {};
 let trashed = {};
+let favoritesSha = null;   // last known SHA — required for PUT to avoid silent overwrite
+let trashedSha   = null;
 let currentFilter = 'all';
+
+// --- UTF-8 safe base64 encode/decode (atob/btoa is Latin-1 only) ---
+function b64encode(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64decode(b64) {
+  return decodeURIComponent(escape(atob(b64)));
+}
+
+// --- GitHub Contents API helpers ---
+async function ghGet(path) {
+  // Cache-buster on the URL because GitHub's CDN can return slightly stale
+  // content for ~60s after a write. The token-auth path normally avoids cache
+  // but we add ?ts=... for safety.
+  const res = await fetch(API_BASE + path + '?ts=' + Date.now(), {
+    headers: {
+      'Authorization': 'token ' + GH_TOKEN,
+      'Accept': 'application/vnd.github+json'
+    },
+    cache: 'no-store'
+  });
+  if (!res.ok) throw new Error('GH GET ' + path + ' failed: ' + res.status);
+  return res.json();   // { content, sha, ... }
+}
+
+async function ghPut(path, jsonObj, sha) {
+  const body = {
+    message: 'update ' + path + ' @ ' + new Date().toISOString(),
+    content: b64encode(JSON.stringify(jsonObj, null, 2)),
+    branch:  BRANCH
+  };
+  if (sha) body.sha = sha;
+  const res = await fetch(API_BASE + path, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + GH_TOKEN,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  return res;   // caller checks status (409 = conflict, 200/201 = ok)
+}
 
 // --- Başlangıç: tüm kartlara kalp ve çöp butonları ekle ---
 function initHearts() {
@@ -2058,50 +2112,75 @@ function reapplyFilter() {
   }
 }
 
-// --- Sync: save favorites to npoint.io ---
-async function saveFavorites() {
+// --- Sync: save favorites to GitHub Contents API ---
+// Conflict handling: if remote SHA changed (someone else wrote in between),
+// re-fetch latest, merge our in-memory changes on top, retry once.
+async function saveFavorites(_retry) {
   try {
-    await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(favorites)
-    });
-    localStorage.setItem('store-project-favs', JSON.stringify(favorites));
-    showSync('green', 'Kaydedildi');
+    const res = await ghPut(FAV_PATH, favorites, favoritesSha);
+    if (res.ok) {
+      const data = await res.json();
+      favoritesSha = data.content.sha;
+      localStorage.setItem('store-project-favs', JSON.stringify(favorites));
+      showSync('green', 'Kaydedildi');
+    } else if (res.status === 409 || res.status === 422) {
+      // Conflict: someone else updated the file. Re-fetch, then retry once.
+      if (!_retry) {
+        const fresh = await ghGet(FAV_PATH);
+        const remote = JSON.parse(b64decode(fresh.content));
+        // Merge: keep our local entries, layer remote on top of missing ones
+        favorites = Object.assign({}, remote, favorites);
+        favoritesSha = fresh.sha;
+        return saveFavorites(true);
+      }
+      throw new Error('Conflict after retry');
+    } else {
+      throw new Error('PUT ' + res.status);
+    }
   } catch(e) {
     localStorage.setItem('store-project-favs', JSON.stringify(favorites));
     showSync('orange', 'Yerel olarak kaydedildi');
   }
 }
 
-// --- Sync: save trash to npoint.io ---
-async function saveTrash() {
+// --- Sync: save trash to GitHub Contents API ---
+async function saveTrash(_retry) {
   try {
-    await fetch(TRASH_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(trashed)
-    });
-    localStorage.setItem('store-project-trash', JSON.stringify(trashed));
-    showSync('green', 'Kaydedildi');
+    const res = await ghPut(TRASH_PATH, trashed, trashedSha);
+    if (res.ok) {
+      const data = await res.json();
+      trashedSha = data.content.sha;
+      localStorage.setItem('store-project-trash', JSON.stringify(trashed));
+      showSync('green', 'Kaydedildi');
+    } else if (res.status === 409 || res.status === 422) {
+      if (!_retry) {
+        const fresh = await ghGet(TRASH_PATH);
+        const remote = JSON.parse(b64decode(fresh.content));
+        trashed = Object.assign({}, remote, trashed);
+        trashedSha = fresh.sha;
+        return saveTrash(true);
+      }
+      throw new Error('Conflict after retry');
+    } else {
+      throw new Error('PUT ' + res.status);
+    }
   } catch(e) {
     localStorage.setItem('store-project-trash', JSON.stringify(trashed));
     showSync('orange', 'Yerel olarak kaydedildi');
   }
 }
 
-// --- Sync: load trash from npoint.io ---
+// --- Sync: load trash from GitHub ---
 async function loadTrash() {
   try {
-    const res = await fetch(TRASH_API_URL);
-    if (res.ok) {
-      const remote = await res.json();
-      if (remote && typeof remote === 'object' && Object.keys(remote).length > 0) {
-        trashed = remote;
-      } else {
-        const local = localStorage.getItem('store-project-trash');
-        if (local) trashed = JSON.parse(local);
-      }
+    const data = await ghGet(TRASH_PATH);
+    trashedSha = data.sha;
+    const remote = JSON.parse(b64decode(data.content));
+    if (remote && typeof remote === 'object') {
+      trashed = remote;
+    } else {
+      const local = localStorage.getItem('store-project-trash');
+      if (local) trashed = JSON.parse(local);
     }
   } catch(e) {
     const local = localStorage.getItem('store-project-trash');
@@ -2110,21 +2189,20 @@ async function loadTrash() {
   renderTrash();
 }
 
-// --- Sync: load favorites from npoint.io ---
+// --- Sync: load favorites from GitHub ---
 async function loadFavorites() {
   try {
-    const res = await fetch(API_URL);
-    if (res.ok) {
-      const remote = await res.json();
-      if (remote && typeof remote === 'object' && Object.keys(remote).length > 0) {
-        favorites = remote;
-      } else {
-        const local = localStorage.getItem('store-project-favs');
-        if (local) favorites = JSON.parse(local);
-      }
-      renderHearts();
-      showSync('green', 'Senkronize');
+    const data = await ghGet(FAV_PATH);
+    favoritesSha = data.sha;
+    const remote = JSON.parse(b64decode(data.content));
+    if (remote && typeof remote === 'object') {
+      favorites = remote;
+    } else {
+      const local = localStorage.getItem('store-project-favs');
+      if (local) favorites = JSON.parse(local);
     }
+    renderHearts();
+    showSync('green', 'Senkronize');
   } catch(e) {
     const local = localStorage.getItem('store-project-favs');
     if (local) favorites = JSON.parse(local);
@@ -2145,16 +2223,16 @@ window.addEventListener('DOMContentLoaded', async function() {
   await loadTrash();
   await loadFavorites();
 
-  // Her 15 saniyede favorileri ve çöpü otomatik yenile
+  // Her 15 saniyede favorileri ve çöpü otomatik yenile (GitHub Contents API)
+  // SHA değişimi = remote'ta yeni yazma var = partnerden güncelleme geldi.
   setInterval(async function() {
     try {
-      const res = await fetch(API_URL);
-      if (res.ok) {
-        const remote = await res.json();
-        const remoteStr = JSON.stringify(remote);
-        const localStr = JSON.stringify(favorites);
-        if (remoteStr !== localStr && remote && typeof remote === 'object') {
+      const data = await ghGet(FAV_PATH);
+      if (data.sha !== favoritesSha) {
+        const remote = JSON.parse(b64decode(data.content));
+        if (remote && typeof remote === 'object') {
           favorites = remote;
+          favoritesSha = data.sha;
           renderHearts();
           showSync('green', 'Partnerden güncellendi');
           setTimeout(function() { showSync('green', 'Senkronize'); }, 2000);
@@ -2162,13 +2240,12 @@ window.addEventListener('DOMContentLoaded', async function() {
       }
     } catch(e) {}
     try {
-      const tres = await fetch(TRASH_API_URL);
-      if (tres.ok) {
-        const tremote = await tres.json();
-        const tremoteStr = JSON.stringify(tremote);
-        const tlocalStr = JSON.stringify(trashed);
-        if (tremoteStr !== tlocalStr && tremote && typeof tremote === 'object') {
+      const tdata = await ghGet(TRASH_PATH);
+      if (tdata.sha !== trashedSha) {
+        const tremote = JSON.parse(b64decode(tdata.content));
+        if (tremote && typeof tremote === 'object') {
           trashed = tremote;
+          trashedSha = tdata.sha;
           renderTrash();
           reapplyFilter();
         }
