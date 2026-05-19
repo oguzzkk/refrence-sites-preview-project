@@ -55,6 +55,126 @@ Full restore via GitHub UI → "Commits" → pick a commit → "View file" → r
 - **localStorage fallback** for offline use. When back online, GitHub is master.
 - **15s polling** detects partner's edits (SHA change → fetch new content).
 
+## How It Works — End-to-End Flow
+
+Senaryo bazlı tam akış. Yeni bir oturumda kodu okumaya başlamadan önce buradan başla.
+
+### 1. Sayfa ilk açıldığında
+
+```
+1. Browser HTML+CSS+JS yükler (~155 KB tek dosya)
+2. JS başlar:
+   - initHearts() her karta heart/note/save/trash butonları enjekte eder
+   - loadTrash()  → GitHub Contents API GET → data/trash.json → b64 decode → trashed objesi
+   - loadFavorites() → aynı → favorites objesi
+   - SHA'lar saklanır (favoritesSha, trashedSha) — sonraki PUT'larda gerekecek
+3. renderHearts() / renderTrash() → DOM'da kalp pembelenir, çöp ikonu aktiflenir
+4. Üstte yeşil "Senkronize" rozeti
+5. setInterval başlar: her 15 saniyede bir SHA diff kontrolü
+```
+
+### 2. Kullanıcı bir karta kalp tıklar
+
+```
+1. toggleFav(brand) → favorites[brand] = { ts: Date.now(), note: '' }
+   (eğer çöpte preservedOnly:true ile not varsa, onu da restore eder)
+2. renderHearts() → kalp anında pembelenir (optimistic UI)
+3. saveFavorites():
+   - ghPut('data/favorites.json', favorites, favoritesSha)
+   - GitHub: { message, content: b64encode(JSON), sha, branch }
+   - Yanıt 200/201 → yeni SHA gelir, favoritesSha güncellenir
+   - Yanıt 409/422 → conflict: re-fetch + merge + retry once
+4. localStorage'a yedek yazılır
+5. Üstte yeşil "Kaydedildi" rozeti (2 sn)
+6. GitHub'da yeni commit: "update data/favorites.json @ <ISO timestamp>"
+```
+
+### 3. Kullanıcı favoride bir not yazar
+
+```
+1. Textarea'ya yazmaya başlar
+   - oninput: textarea auto-grow + saveBtn.classList.add('pending') (kırmızı vurgu)
+   - clearTimeout(noteTimer) + setTimeout(commitNote, 3000) → 3 sn idle fallback
+2. İki yoldan biri commit'i tetikler:
+   - Kullanıcı Kaydet butonuna tıklar → commitNote() anında
+   - VEYA kullanıcı 3 saniye yazmazsa → setTimeout commitNote()'u çağırır
+3. commitNote():
+   - favorites[brand].note = textarea.value
+   - favorites[brand].ts = Date.now()
+   - saveBtn'den pending kalkar
+   - saveFavorites() → PUT (yukarıdaki akış)
+```
+
+### 4. Partner cihazından değişiklik (örn. İnci akşam telefonla)
+
+```
+Sizin tarayıcınız her 15 sn'de polling yapar:
+1. ghGet('data/favorites.json') → { content, sha }
+2. data.sha !== favoritesSha mı? → EVET → değişiklik var
+3. b64decode(content) → JSON.parse → favorites = remote
+4. favoritesSha = data.sha
+5. renderHearts() → İnci'nin eklediği yeni kalpler pembelenir
+6. Üstte "Partnerden güncellendi" → 2 sn sonra "Senkronize"
+```
+
+### 5. Yarış durumu (siz + İnci aynı anda yazma)
+
+```
+T=0    : İnci "Khaite"a not yazar, Kaydet basar → PUT (sha=A)
+         GitHub kabul eder, yeni sha=B oluşur
+T=0.5  : Siz "Sezane"a not yazıyorsunuz, sizin local sha hâlâ A
+T=1    : Siz Kaydet basarsınız → PUT (sha=A, ama remote sha=B) → 409 Conflict
+T=1.2  : saveFavorites() conflict handler:
+         - ghGet() → remote = {...İnci'nin Khaite notu..., ...mevcut...}
+         - favorites = Object.assign({}, remote, favorites)
+                        ← bizim Sezane notumuzu remote'un üstüne katlar
+         - favoritesSha = yeni sha (B)
+         - retry PUT (sha=B) → kabul, yeni sha=C
+T=1.5  : Hem İnci'nin Khaite hem sizin Sezane notu GitHub'da
+```
+
+> Bu, npoint.io'nun "last-write-wins" davranışından çok daha iyi. Race condition'larda kayıp yerine merge oluyor.
+
+### 6. Kazara favori'den çıkarma (silent archive)
+
+```
+1. Kullanıcı notu olan bir kartın kalbine tekrar tıklar (kazara)
+2. toggleFav():
+   - existingNote = favorites[brand].note (boş değil)
+   - trashed[brand] = { ts, note: existingNote, preservedOnly: true }
+   - saveTrash() → GitHub'a commit
+   - delete favorites[brand]
+   - saveFavorites() → GitHub'a commit
+3. Kart "All" filtresinde GÖRÜNÜR (preservedOnly olduğu için çöp olarak işaretlenmez)
+4. Kullanıcı tekrar kalp tıklarsa: trashed[brand].note → favorites[brand].note restore
+```
+
+### 7. Offline → online geçişi
+
+```
+Offline iken:
+- ghPut() throw eder (fetch fail)
+- catch: localStorage.setItem('store-project-favs', JSON.stringify(favorites))
+- Üstte turuncu "Yerel olarak kaydedildi"
+
+Online döner:
+- Bir sonraki edit ghPut'u tetikler
+- GitHub'a önce GET (loadFavorites SHA güncellemesi için), sonra PUT
+- localStorage'daki son state otomatik buluta gider
+```
+
+### 8. Restore — kazara silinen not
+
+```
+Senaryo: İnci "Khaite" notunu yanlışlıkla sildi.
+
+1. https://github.com/oguzzkk/refrence-sites-preview-project/commits/main/data/favorites.json
+2. Silmeden öncekine tıkla → commit detayında diff görür
+3. "Browse files at this point in history" → data/favorites.json → "Raw" → kopyala
+4. data/favorites.json'a UI'dan yapıştır → commit "restore favorites"
+5. 15 sn içinde her iki kullanıcının sayfasında not geri görünür
+```
+
 ## GitHub Contents API — How It Works Here
 
 ### Read
@@ -147,6 +267,99 @@ Embedded in `Womens_Wear_Reference_Sites.html` as `const GH_TOKEN`. It is **publ
 3. **GitHub Pages cache** — Up to 10 min stale after push. Use `?v=YYYYMMDD` query to bypass for testing.
 4. **GitHub API rate limits** — Authenticated requests: 5000/hour per token. Two users polling every 15s = ~480/hour total. Plenty of headroom but be careful with debug loops.
 5. **HTML structural integrity** — Any stray `</div>` in the card list closes the grid container early and breaks layout for all cards after it. Diagnostic: count `<div>` vs `</div>` inside `.site-grid`. Should be equal (offset by 2: the grid + the `.note` are still open at the search boundary).
+
+## Future Improvements — "Belki Sonra" Defteri
+
+Şu an gerek görülmeyen ama ileride faydalı olabilecek iyileştirmeler. Karar verilmedi, sadece belgelendi. Bir gün biri (sen veya yeni bir oturum) "şu yapılsa nasıl olur?" diye sorduğunda buradan başlasın.
+
+### Cloudflare Worker proxy (token gizleme + origin check)
+
+**Sorun:** Token HTML'de hardcoded → view-source ile herkes görür. Sızsa scope dar (sadece bu repo'ya yazabilir) ama yine de "açık duruyor" hissi.
+
+**Çözüm:** Cloudflare Worker arasına eklenir.
+```
+Browser ── (Origin: oguzzkk.github.io) ──→ Worker (token Secret) ──→ GitHub
+```
+
+- Token Worker'da `Secret` olarak gizli, sayfada YOK
+- Worker `Origin` veya `Referer` kontrol eder → sadece bu site'den gelen istekleri kabul
+- Browser CORS kuralı gereği Origin header'ı spoof edilemez → kötü adam Worker URL'ini bulsa bile başka bir siteden istek atamaz
+- Token rotasyonu: sayfayı hiç değiştirmeden, sadece Worker Secret update edilir
+
+**Maliyet:** 30 dk setup. Cloudflare free tier'ı 100k istek/gün — fazlasıyla yeter.
+
+**Ne zaman değer:** Token sızıntısı yaşandığında, kullanıcı sayısı 2'den fazlaya çıktığında, veya rate limit önemli olduğunda.
+
+### Custom domain
+
+**Sorun:** Repo adında yazım hatası var ("refrence" yerine "reference" olmalı). Yeniden adlandırırsak GitHub Pages URL'i bozulur, yer imleri kırılır.
+
+**Çözüm:** Domain bağla → `refs.<senin-domain>.com` gibi. Repo adı değişse bile URL stabil kalır.
+
+**Maliyet:** Yıllık ~$10-15 domain ücreti, DNS ayarı 5-10 dk, GitHub Pages tarafı 5 dk.
+
+**Ne zaman değer:** Repo'nun adını düzeltmek istediğinde, veya URL'i daha sade/hatırlanır yapmak istediğinde.
+
+### Real-time sync (15 sn polling → anında push)
+
+**Sorun:** Partner'in değişikliği 15 saniyeye kadar gecikebilir. Çoğu kullanım senaryosunda fark etmez ama anlık sohbet hissi yok.
+
+**Çözüm seçenekleri:**
+- **Firebase Realtime Database** — gerçek anlık WebSocket bağlantısı. Free tier rahat. Ama Google ekosistemine bağlanmak.
+- **Supabase Realtime** — açık kaynak Firebase alternatifi. Self-host edilebilir. PostgreSQL tabanlı.
+- **Cloudflare Durable Objects** — daha düşük seviye, WebSocket destekli. Worker ekosisteminde.
+
+**Maliyet:** 1-2 saatlik mimari değişikliği. Storage modelinden auth'a kadar her şey değişir.
+
+**Ne zaman değer:** Sayfa "araştırma defteri"nden gerçek "ortak çalışma uygulaması"na dönüşmek istenirse.
+
+### Aktivite akışı (sağ panel — "ne ne zaman olmuş")
+
+**Sorun:** Şu an "kim ne zaman ne ekledi" bilgisi sadece git history'de. Sayfa içinde Slack tarzı bir aktivite akışı yok.
+
+**Çözüm:** Sağ tarafa mini panel:
+```
+14:32  ♥ Khaite favorilere eklendi
+       "Hero bölümü çok temiz"
+14:28  ♥ Sezane favorilere eklendi
+13:45  🗑 Onze Mode çöpe atıldı
+```
+
+Veriyi data/activity.json'a yaz (her aksiyon → append). Veya git commit mesajlarını GitHub API ile çekip parse et (daha temiz, ekstra dosya yok).
+
+**Maliyet:** 1-1.5 saat. UI bileşeni + commit parsing.
+
+**Ne zaman değer:** "Bugün ne yaptık?" sorusu sık sorulmaya başlanırsa.
+
+### Duplicate brand temizliği
+
+**Sorun:** Listede `kfrancestudio.com` ve `fashionnova.com` birer kez fazla geçiyor. Aynı brand text'i = aynı key, favoriler/çöp ikisini birden işaretler.
+
+**Çözüm:** HTML'den fazla geçen kartları sil (5 dakika), commit.
+
+**Maliyet:** ~5 dakika.
+
+**Ne zaman değer:** Bir gün biri "neden iki kart aynı görünüyor" diye sorduğunda. Veya genel temizlikte.
+
+### data.json dosyalarını saatlik snapshot olarak da yedekle
+
+**Sorun:** Şu an sadece data/ klasörü versionlu (her edit commit). Tarihli bir snapshot listesi yok. "Geçen pazartesi ne vardı?" demek için commit history'i tarihe göre filtrelemek gerekir.
+
+**Çözüm:** Eski backup workflow geri eklenebilir — günlük veya saatlik bir cron, `data/` → `backups/snapshots/<tarih>.json` olarak kaydeder. Browse açısından kolay.
+
+**Maliyet:** 10 dk, workflow yazma.
+
+**Ne zaman değer:** Restore senaryoları sıklaşırsa veya tarih-bazlı sorgular önemli olursa.
+
+### npoint.io bin'lerini sil veya boşalt
+
+**Sorun:** Eski npoint.io bin'leri hâlâ canlı (içeride eski data), URL'leri bilen biri yazıp bozabilir (artık bu sayfadan etkilenmiyor ama yine de açık).
+
+**Çözüm:** Bin'lere son bir POST atıp `{}` yap. Veya npoint.io paneline girip silmek (eğer hesap varsa).
+
+**Maliyet:** 2 dakika.
+
+**Ne zaman değer:** Tam temizlik istenirse. Yoksa bırakılabilir, görmezden gelinir.
 
 ## Edit Checklist
 
