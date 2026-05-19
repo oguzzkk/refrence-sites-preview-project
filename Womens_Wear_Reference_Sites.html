@@ -2018,9 +2018,26 @@ function initHearts() {
   });
 }
 
+// --- Helper: is this brand in the visible user-trash (not a silent archive)? ---
+// preservedOnly entries are auto-archived notes from accidentally un-favorited
+// cards. They are NOT shown in the Çöp list and do NOT fade the card.
+function isUserTrashed(brand) {
+  return !!(trashed[brand] && !(typeof trashed[brand] === 'object' && trashed[brand].preservedOnly));
+}
+
 // --- Toggle favorite ---
 function toggleFav(brand) {
   if (favorites[brand]) {
+    // Failsafe: if the favorite has a note, stash it in trash with
+    // preservedOnly:true so an accidental un-favorite doesn't wipe the note.
+    // Re-favoriting restores it (logic below already pulls notes back from
+    // trash). preservedOnly hides the card from the visible Çöp list and
+    // skips the is-trashed faded style — it's a silent archive, not user trash.
+    var existingNote = (typeof favorites[brand] === 'object') ? (favorites[brand].note || '').trim() : '';
+    if (existingNote) {
+      trashed[brand] = { ts: Date.now(), note: existingNote, preservedOnly: true };
+      saveTrash();
+    }
     delete favorites[brand];
   } else {
     // Restore note from trash if it exists
@@ -2103,7 +2120,7 @@ function renderTrash() {
   document.querySelectorAll('.site-card').forEach(card => {
     const brand = card.dataset.brand;
     const trashBtn = card.querySelector('.trash-btn-inline');
-    if (trashed[brand]) {
+    if (isUserTrashed(brand)) {
       card.classList.add('is-trashed');
       if (trashBtn) {
         trashBtn.classList.add('active');
@@ -2117,7 +2134,8 @@ function renderTrash() {
       }
     }
   });
-  const trashCount = Object.keys(trashed).length;
+  // Count only user-trashed (not silent archives) for the visible badge
+  const trashCount = Object.keys(trashed).filter(isUserTrashed).length;
   const trashBadge = document.getElementById('trashBadge');
   if (trashCount > 0) {
     trashBadge.style.display = 'inline';
@@ -2137,8 +2155,8 @@ function filterCards(tag) {
   event.target.classList.add('active');
   cards.forEach(card => {
     const brand = card.dataset.brand;
-    const isTrashed = !!trashed[brand];
-    if (!isTrashed && (tag === 'all' || card.dataset.tags.includes(tag))) {
+    const hiddenByTrash = isUserTrashed(brand);
+    if (!hiddenByTrash && (tag === 'all' || card.dataset.tags.includes(tag))) {
       card.style.display = 'block';
       count++;
     } else {
@@ -2176,7 +2194,7 @@ function filterTrash() {
   btns.forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   cards.forEach(card => {
-    if (trashed[card.dataset.brand]) {
+    if (isUserTrashed(card.dataset.brand)) {
       card.style.display = 'block';
       count++;
     } else {

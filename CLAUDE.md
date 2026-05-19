@@ -82,8 +82,9 @@ The page's `saveFavorites()` does this correctly by keeping the in-memory `favor
 
 // trash (mixed legacy + new format — handle both)
 {
-  "BrandName": 1771502455837,                       // legacy: timestamp only
-  "AnotherBrand": { "ts": ..., "note": "..." }      // new: with preserved note
+  "BrandName":  1771502455837,                                       // legacy: timestamp only
+  "AnotherB":   { "ts": ..., "note": "..." },                        // user-trashed, has note
+  "ThirdBrand": { "ts": ..., "note": "...", "preservedOnly": true }  // silent archive (note from an un-favorited card; NOT shown in Çöp list)
 }
 ```
 
@@ -92,7 +93,8 @@ The page's `saveFavorites()` does this correctly by keeping the in-memory `favor
 | Function | Role | Caveat |
 |---|---|---|
 | `initHearts()` | On DOMContentLoaded, injects heart/note/save-button/trash buttons into every card | Brand key = `.brand` element's text — duplicate brand names will collide. **Notes use a hybrid save model**: typing marks the Kaydet button `.pending` (red outline) and triggers a **3-second idle auto-save fallback** so a closed tab doesn't lose unsaved text. Clicking Kaydet commits immediately and cancels the pending timer. Both paths bump `favorites[brand].ts = Date.now()`. |
-| `toggleFav(brand)` | Toggle favorite, restores note from trash if present | Adds/removes `is-fav` class |
+| `toggleFav(brand)` | Toggle favorite, restores note from trash if present. **Un-favoriting a card with a note silently archives the note into `trashed[brand]` with `preservedOnly: true`** — protects against accidental clicks wiping the note. | Adds/removes `is-fav` class |
+| `isUserTrashed(brand)` | Helper: returns true only if the brand is in `trashed` AND not a silent archive. | Used by `renderTrash`, `filterCards`, `filterTrash`, trash badge count — anywhere "visible user trash" matters. |
 | `toggleTrash(brand)` | Toggle trash, preserves favorite note for later restore | Auto-removes from favorites if present |
 | `filterCards(tag)` | Category filter. **Uses `event.target`.** | Will fail when called programmatically — use `reapplyFilter()` |
 | `filterFavorites()` / `filterTrash()` | Special filters | Same `event.target` caveat |
