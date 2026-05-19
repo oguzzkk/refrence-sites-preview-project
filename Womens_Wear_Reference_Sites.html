@@ -28,6 +28,8 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 /* Defensive: hide unexpected grid children and span the help note across all columns */
 .site-grid > *:not(.site-card):not(.note) { display: none; }
 .site-grid > .note { grid-column: 1 / -1; }
+/* Hard-force each card to occupy exactly one grid column */
+.site-grid > .site-card { grid-column: span 1 !important; min-width: 0; max-width: 100%; box-sizing: border-box; }
 .site-card {
   border: 1px solid #eee; padding: 16px 18px; transition: 0.3s; cursor: pointer;
   text-decoration: none; color: inherit; display: block; position: relative;
