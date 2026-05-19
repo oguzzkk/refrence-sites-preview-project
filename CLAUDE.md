@@ -1,161 +1,155 @@
-# CLAUDE.md — Geliştirici / Claude Context
+# CLAUDE.md — Developer / AI Context
 
-> Bu dosya: kod üzerinde değişiklik yapacak (Claude veya insan) herkes için. Mimari, dikkat noktaları, edit kuralları.
-> Kullanıcı odaklı tanıtım için → [README.md](./README.md)
+> For anyone (human or AI) editing this codebase. Architecture, pitfalls, edit rules.
+> User-facing intro → [README.md](./README.md)
 
-## Proje Kimliği
+## Project
 
-- **Repo:** `oguzzkk/refrence-sites-preview-project` (yazım hatası dahil — "refrence" eksik 'e'. Değiştirilirse GitHub Pages URL'i ölür, tüm yer imleri kırılır.)
-- **Sahip:** Oğuz Kaan (oguzzkk@gmail.com) — kod, deploy
-- **Co-user:** İnci — favori/not katkısı
-- **Kapsam:** [inciko.com](https://inciko.com) — Shopify dark/gotik kadın giyim mağazası için rakip & ilham araştırması.
-- **Canlı:** https://oguzzkk.github.io/refrence-sites-preview-project/Womens_Wear_Reference_Sites.html
+- **Repo:** `oguzzkk/refrence-sites-preview-project` (typo "refrence" intentionally preserved — renaming would break the GitHub Pages URL and all bookmarks)
+- **Purpose:** Two-user shared research tool for women's fashion e-commerce sites. Filterable card grid + favorites + notes + trash, synced via a public JSON store.
+- **Live:** https://oguzzkk.github.io/refrence-sites-preview-project/Womens_Wear_Reference_Sites.html
 
-## Repo Yapısı
+## Repo Layout
 
 ```
 .
-├── README.md                         ← kullanıcı için
-├── CLAUDE.md                         ← bu dosya, geliştirici için
-├── CONTRIBUTING.md                   ← yeni site/etiket ekleme rehberi
-├── index.html                        ← hub (4 karta link veriyor ama 3'ü EKSİK, aşağıya bak)
-├── Womens_Wear_Reference_Sites.html  ← ASIL UYGULAMA (~149KB, tek dosya, tüm CSS+JS inline)
+├── README.md                         ← user-facing
+├── CLAUDE.md                         ← this file, for editors
+├── CONTRIBUTING.md                   ← how to add sites / tags
+├── index.html                        ← hub page (links to 3 files NOT in repo, see "Known debt")
+├── Womens_Wear_Reference_Sites.html  ← MAIN APP (~149KB, single file, all CSS+JS inline)
 ├── .github/workflows/
-│   └── backup-npoint.yml             ← günlük npoint.io yedek workflow'u
-└── backups/                          ← Actions tarafından üretilen JSON snapshot'lar
+│   └── backup-npoint.yml             ← daily npoint.io snapshot workflow
+└── backups/                          ← workflow output: JSON snapshots
     ├── favorites.json
     ├── trash.json
     └── LAST_BACKUP.txt
 ```
 
-## Mimari
+## Architecture
 
 ```
-Tarayıcı (HTML+JS)
-   ↕  fetch GET/POST her 15 sn
-npoint.io  ─── 2 ayrı "bin" ───┐
+Browser (HTML + JS)
+   ↕  fetch GET/POST every 15s
+npoint.io  ─── 2 bins ──────────┐
    │  favorites: 9f430671be24a9b78c70
    │  trash:     8058a715b26b78972bd2
    ↓
-GitHub Actions (günlük cron 03:00 UTC)
+GitHub Actions (daily cron 03:00 UTC)
    ↓
-repo: backups/*.json (versionlu yedek)
+repo: backups/*.json (versioned snapshots)
 ```
 
-- **Backend yok.** npoint.io ücretsiz JSON storage. Auth yok, CORS açık, GET (oku) + POST (yaz).
-- **localStorage fallback:** Offline ise yerel depo, online dönünce remote master kabul.
-- **2 kişi senkron:** 15 sn polling ile değişiklikler birbirine ulaşır.
+- **No backend.** npoint.io is a free anonymous JSON storage. GET reads, POST writes. No auth, CORS open.
+- **localStorage fallback:** If offline, uses local copy. When online, remote is master.
+- **Multi-user sync:** 15s polling pushes changes to the other browser.
 
-## npoint.io ile çalışırken **DİKKAT**
+## npoint.io — Critical Behavior
 
-### 🔴 POST = TÜM bin'i değiştirir (REPLACE, MERGE değil)
+### 🔴 POST replaces the ENTIRE bin (it is NOT a merge)
 
 ```bash
-# Mevcut: {"Zara": {...}, "Cos": {...}}
+# Current: {"Zara": {...}, "Cos": {...}}
 curl -X POST .../9f430671... -d '{"Khaite": {...}}'
-# Sonuç: {"Khaite": {...}}  ← Zara ve Cos UÇTU
+# Result:  {"Khaite": {...}}   ← Zara and Cos DELETED
 ```
 
-**Kural:** Edit yaparken **önce GET ile mevcut datayı çek**, bellekte merge et, sonra POST.
+**Rule:** Always `GET` current state, merge in memory, then `POST` the merged whole object.
 
-Sayfa kodundaki `saveFavorites()` bunu güvenle yapıyor çünkü bellekteki `favorites` objesini her zaman master tutuyor ve her POST'ta tüm objeyi gönderiyor.
+The page's `saveFavorites()` does this correctly by keeping the in-memory `favorites` object as the master and sending the whole thing on every save. Any external tool/script that POSTs a partial object will wipe data.
 
-### npoint.io endpoint'leri
+### Endpoints
 
-| Veri | URL | Web arayüz |
+| Bin | URL | Web UI |
 |---|---|---|
-| Favoriler | `https://api.npoint.io/9f430671be24a9b78c70` | https://www.npoint.io/docs/9f430671be24a9b78c70 |
-| Çöp | `https://api.npoint.io/8058a715b26b78972bd2` | https://www.npoint.io/docs/8058a715b26b78972bd2 |
+| Favorites | `https://api.npoint.io/9f430671be24a9b78c70` | https://www.npoint.io/docs/9f430671be24a9b78c70 |
+| Trash | `https://api.npoint.io/8058a715b26b78972bd2` | https://www.npoint.io/docs/8058a715b26b78972bd2 |
 
-### Veri Formatları
+> These URLs ARE the auth — anyone who knows them can read/write. They are already publicly exposed in the HTML, so do not treat them as secrets.
+
+### Data formats
 
 ```jsonc
 // favorites
 {
-  "BrandName": { "ts": 1771528989579, "note": "kullanıcı notu" }
+  "BrandName": { "ts": 1771528989579, "note": "user note text" }
 }
 
-// trash
+// trash (mixed legacy + new format — handle both)
 {
-  "BrandName": 1771502455837                    // sadece timestamp (eski format)
-  // veya
-  "BrandName": { "ts": ..., "note": "..." }     // yeni format (not korunmuş)
+  "BrandName": 1771502455837,                       // legacy: timestamp only
+  "AnotherBrand": { "ts": ..., "note": "..." }      // new: with preserved note
 }
 ```
 
-> Trash hem `int` hem `obj` olabilir — `toggleFav` içinde `typeof === 'object'` kontrolü var, koruyun.
+## Key JS Functions (`Womens_Wear_Reference_Sites.html`)
 
-## Önemli JS Fonksiyonları (`Womens_Wear_Reference_Sites.html`)
-
-| Fonksiyon | Ne yapar | Dikkat |
+| Function | Role | Caveat |
 |---|---|---|
-| `initHearts()` | DOMContentLoaded'da her karta favori, not, çöp butonu enjekte eder | Brand key olarak `.brand` text içeriği kullanılır → aynı isimde iki marka olursa çakışır |
-| `toggleFav(brand)` | Favori ekle/çıkar, çöpteki notu geri yükler | İlgili kartı `is-fav` class'ı alır |
-| `toggleTrash(brand)` | Çöp ekle/çıkar, favori notunu çöpte korur (restore için) | Favorideyse otomatik favori'den çıkarır |
-| `filterCards(tag)` | Kategori filtresi. **`event.target` kullanıyor.** | Programatik çağrıda fail eder → `reapplyFilter()` kullan |
-| `filterFavorites()` / `filterTrash()` | Özel filtreler | Aynı `event.target` sorunu |
-| `reapplyFilter()` | Mevcut filtreyi yeniden uygular (programatik kullanım için) | toggleTrash sonrası otomatik çağrılır |
-| `saveFavorites()` / `saveTrash()` | npoint POST + localStorage backup | Hata olursa `showSync('orange', ...)` |
-| `loadFavorites()` / `loadTrash()` | npoint GET, fallback localStorage | Remote boşsa local'i kullanır |
-| `showSync(color, text)` | Üstteki yeşil/turuncu sync rozeti | |
+| `initHearts()` | On DOMContentLoaded, injects heart/note/trash buttons into every card | Brand key = `.brand` element's text — duplicate brand names will collide |
+| `toggleFav(brand)` | Toggle favorite, restores note from trash if present | Adds/removes `is-fav` class |
+| `toggleTrash(brand)` | Toggle trash, preserves favorite note for later restore | Auto-removes from favorites if present |
+| `filterCards(tag)` | Category filter. **Uses `event.target`.** | Will fail when called programmatically — use `reapplyFilter()` |
+| `filterFavorites()` / `filterTrash()` | Special filters | Same `event.target` caveat |
+| `reapplyFilter()` | Re-applies current filter (safe for programmatic calls) | Called automatically after toggleTrash |
+| `saveFavorites()` / `saveTrash()` | npoint POST + localStorage backup | On error → `showSync('orange', ...)` |
+| `loadFavorites()` / `loadTrash()` | npoint GET with localStorage fallback | If remote empty, uses local |
+| `showSync(color, text)` | Updates sync badge (green/orange) | |
 
-### CSS Sınıfları
+### CSS Classes
 
-- `.site-card` — ana kart container
-- `.site-card.is-fav` — favori (pembe arka plan)
-- `.site-card.is-trashed` — çöpte (soluk)
-- `.fav-btn` / `.fav-btn.active` — kalp butonu, sağ üst absolute
-- `.fav-note-wrap` / `.fav-note` — auto-grow textarea, favori altında
-- `.trash-btn-inline` / `.trash-btn-inline.active` — çöp ikonu, tag-row içinde
-- `.tag-XXX` — etiket renkleri (CONTRIBUTING.md'de tam liste)
+- `.site-card` — base card container
+- `.site-card.is-fav` — favorited (pink background)
+- `.site-card.is-trashed` — trashed (faded)
+- `.fav-btn` / `.fav-btn.active` — heart button, absolute top-right
+- `.fav-note-wrap` / `.fav-note` — auto-grow textarea below favorited card
+- `.trash-btn-inline` / `.trash-btn-inline.active` — trash icon inside tag-row
+- `.tag-XXX` — per-tag colors (full table in CONTRIBUTING.md)
 
-## Yedek Sistemi
+## Backup Workflow
 
-[`.github/workflows/backup-npoint.yml`](./.github/workflows/backup-npoint.yml) her gün 03:00 UTC'de:
+[`.github/workflows/backup-npoint.yml`](./.github/workflows/backup-npoint.yml) runs daily at 03:00 UTC:
 
-1. npoint.io'dan 2 endpoint'i çeker (`curl --fail`)
-2. `jq` ile JSON geçerli mi kontrol eder — değilse commit ATLANIR (sağlam yedek bozulmaz)
-3. Pretty-print eder (her marka kendi satırında, diff okunur)
-4. `LAST_BACKUP.txt` yazar (tarih + count)
-5. Değişiklik varsa commit + push (yoksa atlar)
+1. `curl --fail` both npoint endpoints
+2. Validate JSON with `jq` — invalid → step fails → commit skipped (protects last good snapshot from npoint outages)
+3. Pretty-print (one brand per line) for readable diffs
+4. Write `LAST_BACKUP.txt` (timestamp + counts)
+5. Commit + push if anything changed; skip otherwise
 
-Manuel tetikleme: https://github.com/oguzzkk/refrence-sites-preview-project/actions/workflows/backup-npoint.yml → "Run workflow"
+Manual trigger: Actions tab → "Backup npoint data" → "Run workflow".
 
-## Bilinen Sorunlar / Borçlar
+## Known Debt
 
-1. **`index.html` hub'ında 3 kırık link** → `references.html`, `mockup.html`, `design-reference.html`, `build-plan.html` linkleniyor ama dosyalar yok.
-   - Drive'da hazır halleri var: `G:\My Drive\Works\inciko\deploy\Site_Deploy_Package\`
-   - Çözüm: 4 dosyayı repo'ya kopyalayıp commit, ya da hub'daki linkleri direkt `Womens_Wear_Reference_Sites.html`'e yönlendir.
-2. **Repo adında yazım hatası:** "refrence" → "reference" olmalı. Düzeltirseniz GitHub Pages URL'i değişir, tüm yer imleri ve eski paylaşımlar 404. Custom domain (örn. `refs.inciko.com`) bir kez kurulsa kalıcı çözüm olur.
-3. **Aynı brand iki kez:** `kfrancestudio.com` ve `fashionnova.com` listede tekrar ediyor. Favoriler/çöp `brand` key'i ile çalıştığı için tek kayıt olur ama liste ham temizlenmeli.
-4. **Race condition (nadiren):** İki kişi tam aynı anda yazarsa son POST kazanır. 15 sn polling sayesinde pratikte nadir.
-5. **GitHub Pages cache:** Push sonrası 1-10 dk eski sürüm görünebilir. `?v=YYYYMMDD` query ile bypass.
-6. **npoint.io rate limit:** Ücretsiz plan dakikada N istek (belgesi flu). Aşırı POST'tan kaçın.
+1. **Broken hub links** — `index.html` references `references.html`, `mockup.html`, `design-reference.html`, `build-plan.html`. None exist in repo. Either commit them or point the hub directly at `Womens_Wear_Reference_Sites.html`.
+2. **Repo name typo** — "refrence" should be "reference". Renaming breaks the GitHub Pages URL (which is not auto-redirected). A custom domain would make future renames painless.
+3. **Duplicate brands** — `kfrancestudio.com` and `fashionnova.com` appear twice each. Since favorites use brand text as a unique key, only one of each can be favorited; the dup should be removed.
+4. **Race condition (rare)** — Two simultaneous writes lose one update. The 15s polling makes this rare in practice.
+5. **GitHub Pages cache** — Up to 10 min stale after push. Use `?v=YYYYMMDD` query to bypass for testing.
+6. **npoint.io rate limits** — Free tier has undocumented limits; avoid hammering with POST loops.
 
-## Editleme Yaparken Checklist
+## Edit Checklist
 
-- [ ] `Womens_Wear_Reference_Sites.html` 149KB tek dosya — editör tarafında dikkat
-- [ ] Yeni etiket eklerken: filtre butonu (HTML), `.tag-XXX` CSS class'ı, kart `data-tags` — üç yer
-- [ ] Yeni JS fonksiyonu eklerken `event.target` kullanma → parametre olarak `btn` al
-- [ ] Push öncesi sayfayı lokalde aç, console'da hata yok mu bak
-- [ ] Push sonrası canlı linki test et (1-10 dk cache)
-- [ ] Veri formatını değiştirdiysen `loadFavorites()` içine eski formatı yeni'ye dönüştüren migration ekle
+- [ ] `Womens_Wear_Reference_Sites.html` is 149KB single file — be careful with editor performance
+- [ ] Adding a new tag requires **three changes**: filter button (HTML), `.tag-XXX` CSS class, card `data-tags` attribute
+- [ ] Never use `event.target` in new JS — pass the button as a parameter instead
+- [ ] Open the file locally before pushing; check browser console for errors
+- [ ] After push, test the live URL (1–10 min Pages cache)
+- [ ] If you change a data format, add a migration in `loadFavorites()` that converts old → new shape
 
-## İlgili Kaynaklar (Drive)
+## Manual Restore from Backup
 
-`G:\My Drive\Works\inciko\` (symlink: `C:\Users\oguzz\Desktop\Working\Inciko.com\`)
+If npoint.io data is wiped/corrupted:
 
-- `Referances/ReferanceAnalyzeSite/CONTEXT.md` — Bu CLAUDE.md'nin Şubat 2026 ataşı (eski URL'lerle)
-- `Referances/ReferanceAnalyzeSite/backups/` — Manuel snapshot'lar (Actions'tan ayrı)
-- `deploy/Site_Deploy_Package/` — Hub'daki 4 eksik HTML burada hazır
-- `docs/Shopify_*.pdf` — Shopify build planları (referans aracından ayrı, asıl mağaza için)
-- `mockups/Zara_*.html` — Tasarım DNA mockup'ları
+```bash
+# 1. Download the desired snapshot from a past commit in backups/
+# 2. POST it back to the bin (replaces current state)
+curl -X POST https://api.npoint.io/9f430671be24a9b78c70 \
+  -H "Content-Type: application/json" \
+  -d @favorites.json
 
-## inciko Asıl Tema Repo'su (Ayrı)
+curl -X POST https://api.npoint.io/8058a715b26b78972bd2 \
+  -H "Content-Type: application/json" \
+  -d @trash.json
+```
 
-Bu repo **sadece araştırma aracı**. Asıl mağaza teması farklı bir repo'da:
-- Repo: https://github.com/oguzzkk/inciko (Shopify Horizon teması)
-- Lokal: `C:\Users\oguzz\Desktop\İnciko\GitHub\inciko`
-- Branch: `dev` (preview), `main` (live)
-
-Bu iki repoyu karıştırma — buradaki değişiklik canlı mağazaya yansımaz.
+Then open the live page in a browser — within 15s both users see the restored data.

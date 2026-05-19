@@ -1,53 +1,42 @@
-# Referans Siteler — Kadın Giyim
+# Womens Wear Reference Sites
 
-[inciko.com](https://inciko.com) için kadın giyim e-ticaret sitelerini araştırma, filtreleme, favorileme ve birlikte not alma aracı. **Tek HTML dosyası**, backend yok, iki kişi (Oğuz + İnci) arasında canlı senkron.
+Single-page research tool for browsing, filtering, favoriting and annotating women's fashion e-commerce sites. **No backend**, **single HTML file**, **two-user live sync** via a public JSON store.
 
-## 🔗 Canlı Link
-
-**Tıklayın — tarayıcıda açılır:**
+## 🔗 Live
 
 → https://oguzzkk.github.io/refrence-sites-preview-project/Womens_Wear_Reference_Sites.html
 
-> Tarayıcınızın yer imlerine ekleyin. Telefondan da çalışır.
+## What it does
 
-## Ne yapar?
+- **263+ women's fashion sites** in a single page (Zara, Toteme, Killstar, COS, Khaite, etc.)
+- **14 category filters:** Minimal · Luxury · DTC · Shopify · Fast Fashion · Indie · Sustainable · Dark/Gothic · Victorian · Avant-Garde · Turkish · Butik · IG Butik
+- ♥ **Favorite a site** → shared across both users, syncs every 15s
+- ✍️ **Write a note** on any favorite (auto-saves after 800ms)
+- 🗑 **Trash** sites you've ruled out (reversible, hidden from main view)
 
-- **263+ kadın giyim sitesi** tek sayfada (Zara'dan Killstar'a, Toteme'den Trendyol'a)
-- 14 kategori ile filtreleme: Minimal · Luxury · DTC · Shopify · Fast Fashion · Indie · Sustainable · Dark/Gothic · Victorian · Avant-Garde · Turkish · Butik · IG Butik
-- ♥ **Favori ekle** → siz ve İnci aynı listeyi anında görürsünüz (15 sn senkron)
-- ✍️ **Her favoriye not yaz** ("Hero bölümü çok temiz", "Footer iyi referans" vb.)
-- 🗑 **Çöp sistemi** → ilgisiz siteleri "Çöp"e at, listeden kalksın (geri alınabilir)
+## How to use
 
-## Nasıl Kullanılır?
-
-| İşlem | Nasıl |
+| Action | How |
 |---|---|
-| Site ziyaret | Karta tıkla → yeni sekmede açılır |
-| Favori ekle | Kartın **sağ üst köşesindeki ♥** ikonuna tıkla |
-| Not yaz | Favorilediğin kartın altında textarea belirir → yaz, 1 sn sonra otomatik kaydeder |
-| Çöpe at | Kartın altındaki etiket satırında **🗑** ikonu |
-| Sadece favoriler | Üstte kırmızı **♥ Favoriler** butonu |
-| Sadece çöp | Üstte **🗑 Çöp** butonu |
-| Kategori filtre | Üstteki kategori butonları |
+| Visit a site | Click the card — opens in new tab |
+| Favorite | Click the **♥** in the card's top-right corner |
+| Note | Once favorited, a textarea appears under the card — type, auto-saves |
+| Trash | Click the **🗑** in the card's tag row |
+| Show favorites only | Top bar → **♥ Favoriler** |
+| Show trash only | Top bar → **🗑 Çöp** |
+| Filter by category | Category buttons in the top bar |
 
-## Veriniz Güvende mi?
+## Is the data safe?
 
-Evet. Üç katmanlı koruma:
+Three-layer protection:
 
-1. **Bulutta (npoint.io)** — Sizin ve İnci'nin gördüğü ortak liste.
-2. **Tarayıcınızda (localStorage)** — Çevrimdışıyken bile çalışır.
-3. **GitHub'da otomatik yedek** — Her gün (TR 06:00) GitHub Actions çalışıp [`backups/`](./backups) klasörüne snapshot atıyor. Tüm geçmiş [commit geçmişinde](https://github.com/oguzzkk/refrence-sites-preview-project/commits/main/backups) görünür.
+1. **Cloud (npoint.io)** — Primary shared storage.
+2. **Browser localStorage** — Offline fallback per browser.
+3. **GitHub Actions daily backup** — Snapshot committed to [`backups/`](./backups) every day. All history in [commit log](https://github.com/oguzzkk/refrence-sites-preview-project/commits/main/backups).
 
-**Veri kaybolursa:** [`backups/favorites.json`](./backups/favorites.json) ve [`backups/trash.json`](./backups/trash.json) en son sağlam halinizi tutar. Bir önceki haftaya dönmek için ilgili commit'i açıp dosyayı bilgisayarınıza indirin.
+**To restore:** open any past commit in `backups/` and download `favorites.json` / `trash.json`. To re-import, POST it back to the npoint endpoint (see [CLAUDE.md](./CLAUDE.md)).
 
-## Yeni Site Eklemek
+## Contributing
 
-Yeni referans site eklemek için: [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-## Sorun Bildirimi
-
-Bir şey bozuksa Oğuz'a (oguzzkk@gmail.com) yaz veya repo'ya issue aç.
-
-## Teknik Detay
-
-Geliştirme yapacaksanız (HTML/JS değişikliği): [CLAUDE.md](./CLAUDE.md)
+To add a new site or category, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+For architecture details and editing rules, see [CLAUDE.md](./CLAUDE.md).

@@ -1,26 +1,26 @@
-# Katkı Rehberi — Yeni Site Ekleme
+# Contributing — Adding Sites and Tags
 
-Yeni bir kadın giyim sitesi eklemek istiyorsanız bu rehberi takip edin. Liste `Womens_Wear_Reference_Sites.html` içinde, ham HTML olarak duruyor — başka build adımı yok.
+The site list lives as raw HTML inside `Womens_Wear_Reference_Sites.html`. No build step.
 
-## Hızlı Adımlar
+## Quick Steps
 
-1. `Womens_Wear_Reference_Sites.html` dosyasını aç
-2. Uygun kategori bölümüne git (ör. `<!-- DARK / VICTORIAN -->` yorumunun altı)
-3. Aşağıdaki template'i kopyala, doldur
-4. Commit + push → 1-2 dk sonra canlı
+1. Open `Womens_Wear_Reference_Sites.html`
+2. Jump to the right category section (e.g. `<!-- DARK / VICTORIAN -->`)
+3. Paste the template below, fill it in
+4. Commit + push → live in 1–2 min (GitHub Pages cache)
 
-## Kart Template
+## Card Template
 
 ```html
-<a href="https://markaadi.com" target="_blank" class="site-card" data-tags="ETIKET1 ETIKET2">
-  <div class="brand">Marka Adı</div><div class="cat">Kategori — Ülke</div>
-  <div class="desc">2-3 cümle açıklama. Tasarım gücü, hedef kitle, neden referans olduğu.</div>
-  <div class="url">markaadi.com</div>
-  <div class="tag-row"><span class="tag tag-ETIKET1">Etiket1</span><span class="tag tag-ETIKET2">Etiket2</span></div>
+<a href="https://brandsite.com" target="_blank" class="site-card" data-tags="TAG1 TAG2">
+  <div class="brand">Brand Name</div><div class="cat">Category — Country</div>
+  <div class="desc">2–3 sentences. Design strength, target audience, why it's a reference.</div>
+  <div class="url">brandsite.com</div>
+  <div class="tag-row"><span class="tag tag-TAG1">Tag1</span><span class="tag tag-TAG2">Tag2</span></div>
 </a>
 ```
 
-### Örnek
+### Example
 
 ```html
 <a href="https://www.khaite.com" target="_blank" class="site-card" data-tags="luxury minimal">
@@ -31,72 +31,69 @@ Yeni bir kadın giyim sitesi eklemek istiyorsanız bu rehberi takip edin. Liste 
 </a>
 ```
 
-## Etiket Listesi (14 adet)
+## Tag Reference (14 tags)
 
-`data-tags` attribute'unda **boşlukla ayrılmış**, küçük harf. Tek karta birden fazla etiket atayabilirsin.
+In `data-tags`, use **space-separated, lowercase**. A card can have multiple tags.
 
-| Etiket (data-tags) | Görsel etiket | Renk şeması | Anlam |
+| Tag (data-tags) | Display | Color scheme | Meaning |
 |---|---|---|---|
-| `minimal` | Minimal | gri | Editorial, sade tasarım |
-| `luxury` | Luxury | siyah | Lüks, üst segment |
-| `dtc` | DTC | yeşil | Direct-to-consumer, kendi markası |
-| `shopify` | Shopify | mavi | Shopify üzerinde kurulu |
-| `fast` | Fast Fashion | turuncu | Hızlı moda, yüksek hacim |
-| `indie` | Indie | mor | Bağımsız, küçük ölçekli |
-| `sustainable` | Sustainable | yeşil | Sürdürülebilir/etik üretim |
-| `dark` | Dark / Gothic | koyu gri / gümüş | Karanlık estetik, gotik |
-| `victorian` | Victorian | mor-siyah / lila | Viktoryan / korse / dantel |
-| `avant` | Avant-Garde | koyu gri / açık | Avangart, deneysel |
-| `turkish` | Turkish | kırmızı | Türk markası |
-| `butik` | Butik | bej | Türk butik tarzı |
-| `igbutik` | IG Butik | pembe (Instagram) | Instagram üzerinden satış |
+| `minimal` | Minimal | grey | Editorial, clean design |
+| `luxury` | Luxury | black | High-end, premium |
+| `dtc` | DTC | green | Direct-to-consumer, own brand |
+| `shopify` | Shopify | blue | Built on Shopify |
+| `fast` | Fast Fashion | orange | Fast fashion, high volume |
+| `indie` | Indie | purple | Independent, small scale |
+| `sustainable` | Sustainable | green | Sustainable / ethical production |
+| `dark` | Dark / Gothic | dark grey / silver | Dark aesthetic, gothic |
+| `victorian` | Victorian | purple-black / lilac | Victorian / corset / lace |
+| `avant` | Avant-Garde | dark grey / light | Avant-garde, experimental |
+| `turkish` | Turkish | red | Turkish brand |
+| `butik` | Butik | beige | Turkish boutique style |
+| `igbutik` | IG Butik | pink (Instagram) | Instagram-first seller |
 
-## Etiket Seçim Rehberi (inciko perspektifi)
+## Tag Selection Guide
 
-- Dark wear markası mı? → `dark` (zorunlu) + uygun ek (`victorian`, `avant`, `indie`)
-- Türk rakip mi? → `turkish` (zorunlu) + `butik` veya `igbutik` veya `fast`
-- Tasarım referansı mı? → `minimal` veya `luxury` (bizim DNA için bunlar yıldız)
-- Shopify üzerindeyse not düşmek faydalı → `shopify`
+- **Pick all tags that genuinely apply** — overtagging dilutes filters, undertagging makes the site invisible.
+- **Combine for discoverability:** a Turkish IG boutique selling dark gothic items → `turkish butik dark`. It will show up in all three filters.
+- **Platform tags matter:** if the site is on Shopify, always add `shopify` — that's a research signal.
 
-Birden fazla seç → filtre çakışmasında daha fazla bulunabilir olur.
+## Adding a Brand-New Tag (bigger task)
 
-## Yeni Etiket Eklemek (büyük iş)
+If none of the 14 existing tags fit, you need to change **three places**:
 
-Mevcut 14 etiket dışında yeni biri lazımsa 3 yerde değişiklik gerekir:
+1. **Filter button** in `<div class="filter-bar">` (`onclick="filterCards('NEW_TAG')"`)
+2. **Tag color CSS** in `<style>`: `.tag-NEW_TAG { background: #...; color: #...; }`
+3. **Card `data-tags`** in whichever cards use it
 
-1. **Filtre butonu** — `<div class="filter-bar">` içinde (`onclick="filterCards('YENI_ETIKET')"`)
-2. **Tag rengi CSS** — `<style>` içinde `.tag-YENI_ETIKET { background: #...; color: #...; }`
-3. **Kart `data-tags`** — kullanmak istediğin kartlarda
+Then update the tag table in this file and in `README.md`.
 
-Sonra: README.md ve CONTRIBUTING.md'deki etiket tablosunu güncelle.
+## Writing Rules
 
-## Yazım Kuralları
+- **Brand:** Brand's official spelling, Title Case.
+- **Cat (category):** `Type — Country` format with em-dash `—` (not hyphen). E.g. `Premium — France`
+- **Desc:** 2–3 sentences. English (for consistency with existing list). 100–200 chars ideal.
+- **URL (display):** Domain only — no `https://`, no `www.`. E.g. `khaite.com`
+- **href:** Full URL including `https://`. This is what opens on click.
 
-- **Brand:** Markanın resmi yazımı (Title Case). _İlk harfler büyük._
-- **Cat (Kategori):** `Tür — Ülke` formatı (em-dash `—`, hyphen değil). Örn: `Premium — France`
-- **Desc:** 2-3 cümle, İngilizce (mevcut liste tutarlılığı için). 100-200 karakter ideal.
-- **URL (görsel):** Sadece domain (https:// yok, www. yok). Örn: `khaite.com`
-- **href:** Tam URL (https:// dahil). Tıklanınca açılan link.
+## Brand Name = Unique Key
 
-## Brand Adı = Anahtar
+The favorites and trash systems use the brand text as a **unique identifier**. If you add two cards with the same brand name they will collide — favoriting one favorites both.
 
-Favoriler ve çöp sistemi marka adını (`.brand` text'i) **unique anahtar** olarak kullanıyor. Aynı isimde iki kart eklersen veri çakışır — biri favoriye eklenince diğeri de görünür.
+> Existing duplicates in the list: `kfrancestudio.com` (×2), `fashionnova.com` (×2). Tech debt to be cleaned up.
 
-> Mevcut listede tespit edilen duplicate'ler: `kfrancestudio.com` (iki kez), `fashionnova.com` (iki kez). Temizleneceğine düşülen borç.
+## Testing Locally
 
-## Lokalde Test
-
-Push'lamadan önce dosyayı yerel olarak aç:
+Open the file directly in a browser before pushing:
 
 ```
-file:///C:/Users/oguzz/Desktop/İnciko/GitHub/refrence-sites-preview-project/Womens_Wear_Reference_Sites.html
+file://<repo-root>/Womens_Wear_Reference_Sites.html
 ```
 
-Tarayıcının Developer Console'unda (F12) hata var mı kontrol et. Yeni kart görünmeli, filtre butonları sayıyı doğru göstermeli.
+Open DevTools (F12) and check the Console for errors. New card should appear; filter buttons should count correctly.
 
-> Lokal'de açtığında favoriler senkron çalışır (npoint.io public). Test favorisi eklediysen sonra silmeyi unutma.
+> Local also syncs with npoint.io (public bin). If you favorite something for testing, remember to un-favorite before pushing.
 
-## Commit Mesajı Örnekleri
+## Commit Message Examples
 
 ```
 add: Khaite reference card (luxury, minimal)
@@ -105,8 +102,7 @@ fix: Sezane URL typo
 docs: update tag list in CONTRIBUTING
 ```
 
-## Sorularınız İçin
+## More
 
-- Teknik mimari için: [CLAUDE.md](./CLAUDE.md)
-- Genel kullanım için: [README.md](./README.md)
-- Direkt Oğuz'a: oguzzkk@gmail.com
+- Architecture details: [CLAUDE.md](./CLAUDE.md)
+- General usage: [README.md](./README.md)
