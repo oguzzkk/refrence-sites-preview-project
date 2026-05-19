@@ -90,6 +90,14 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 .fav-note:focus { border-color: #e74c3c; background: #fff; }
 .fav-note::placeholder { color: #ccc; font-style: italic; }
 .fav-note-saved { font-size: 0.6em; color: #2ecc71; margin-left: 4px; display: none; }
+.fav-note-save {
+  margin-top: 6px; padding: 4px 14px; border: 1px solid #aaa; background: transparent;
+  font-size: 0.62em; font-family: 'Inter', sans-serif; color: #777; cursor: pointer;
+  letter-spacing: 1.5px; text-transform: uppercase; transition: 0.2s; border-radius: 3px;
+}
+.fav-note-save:hover { background: #111; color: #fff; border-color: #111; }
+.fav-note-save.pending { border-color: #e74c3c; color: #e74c3c; }
+.fav-note-save.pending:hover { background: #e74c3c; color: #fff; border-color: #e74c3c; }
 /* Trash/Bin system */
 .site-card.is-trashed { opacity: 0.4; border-color: #ddd; background: #f9f9f9; }
 .filter-btn.trash-filter { border-color: #999; color: #999; }
@@ -1935,7 +1943,7 @@ function initHearts() {
     };
     card.appendChild(btn);
 
-    // Add note textarea
+    // Add note textarea (manual save via button — no auto-save while typing)
     const noteWrap = document.createElement('div');
     noteWrap.className = 'fav-note-wrap';
     const noteArea = document.createElement('textarea');
@@ -1944,26 +1952,38 @@ function initHearts() {
     noteArea.rows = 1;
     noteArea.onclick = function(e) { e.preventDefault(); e.stopPropagation(); };
     noteArea.onkeydown = function(e) { e.stopPropagation(); };
-    let noteTimer = null;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'fav-note-save';
+    saveBtn.textContent = 'Kaydet';
+    saveBtn.onclick = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (favorites[brand]) {
+        if (typeof favorites[brand] === 'object') {
+          favorites[brand].note = noteArea.value;
+        } else {
+          favorites[brand] = { ts: favorites[brand], note: noteArea.value };
+        }
+      }
+      saveBtn.classList.remove('pending');
+      saveFavorites();
+    };
+
     noteArea.oninput = function(e) {
       e.stopPropagation();
       // Auto-grow textarea
       this.style.height = 'auto';
       this.style.height = this.scrollHeight + 'px';
-      if (favorites[brand]) {
-        if (typeof favorites[brand] === 'object') {
-          favorites[brand].note = this.value;
-        } else {
-          favorites[brand] = { ts: favorites[brand], note: this.value };
-        }
-      }
-      clearTimeout(noteTimer);
-      noteTimer = setTimeout(function() { saveFavorites(); }, 800);
+      // Mark as unsaved
+      saveBtn.classList.add('pending');
     };
+
     const savedLabel = document.createElement('span');
     savedLabel.className = 'fav-note-saved';
     savedLabel.textContent = 'kaydedildi';
     noteWrap.appendChild(noteArea);
+    noteWrap.appendChild(saveBtn);
     noteWrap.appendChild(savedLabel);
     card.appendChild(noteWrap);
 
