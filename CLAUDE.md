@@ -35,24 +35,30 @@
 ## Architecture
 
 ```
-Browser (HTML + JS)
+Browser (HTML + JS, NO token in page)
    │
-   │  GitHub Contents API (token-auth)
-   │  GET   /repos/.../contents/data/favorites.json   ← read with SHA
-   │  PUT   /repos/.../contents/data/favorites.json   ← write with SHA
-   │  poll  every 15s — diff SHA → if changed, refresh
+   │  Simple CORS fetch (no custom headers on GET; Content-Type on PUT)
+   │  Browser auto-sets:  Origin: https://oguzzkk.github.io
+   ↓
+Cloudflare Worker — refsites-proxy.oguzzkk.workers.dev
+   │  - Rejects any Origin other than https://oguzzkk.github.io
+   │  - Adds  Authorization: token <GITHUB_TOKEN from Cloudflare Secret>
+   │  - Pass-through, returns GitHub's native JSON shape
+   ↓
+GitHub Contents API
+   GET  /repos/.../contents/data/favorites.json   ← read with SHA
+   PUT  /repos/.../contents/data/favorites.json   ← write with SHA
    ↓
 data/favorites.json + data/trash.json in this repo
-   │
-   │  Every PUT = new git commit = automatic versioning
-   ↓
-Full restore via GitHub UI → "Commits" → pick a commit → "View file" → revert
+   Every PUT = new git commit = automatic versioning
+   Full restore via GitHub UI → Commits → pick commit → revert
 ```
 
-- **Storage is git itself.** No external service, no third party. The repo is the database.
-- **Auth via hardcoded fine-grained PAT** baked into the HTML. Scope: **only this repo, only Contents read+write**. Worst-case leak = sham commit (revert via git history).
+- **Token never on the client.** Lives only as a Cloudflare Worker Secret. View-source on the page shows zero `github_pat_`. GitHub Secret Scanning cannot revoke what it cannot find.
+- **Origin-locked at the edge.** Worker rejects any request whose `Origin` isn't `https://oguzzkk.github.io`. Browser sets this header automatically; CORS prevents client-side spoofing.
+- **Simple CORS pattern.** GET sends no custom headers, so no preflight is triggered. PUT only sends `Content-Type` (Worker explicitly allows it). Avoids the preflight-mismatch failure mode entirely.
 - **SHA-based concurrent-update protection.** Every PUT requires the file's last known SHA. If two clients race, the second one gets `409 Conflict` → re-fetch latest, merge, retry. No silent overwrite.
-- **localStorage fallback** for offline use. When back online, GitHub is master.
+- **localStorage fallback** for offline use. When back online, GitHub via Worker is master.
 - **15s polling** detects partner's edits (SHA change → fetch new content).
 
 ## How It Works — End-to-End Flow
