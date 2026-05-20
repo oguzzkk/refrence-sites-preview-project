@@ -1782,13 +1782,12 @@ function b64decode(b64) {
 }
 
 // --- Worker proxy helpers — no Authorization header (Worker adds the token) ---
-// GET deliberately sends NO custom headers so it qualifies as a "simple CORS
-// request" — no preflight, instant fetch. Worker still adds Accept when it
-// calls GitHub on our behalf.
+// GET deliberately sends NO custom headers AND no fetch options that imply
+// extra headers (no cache:'no-store' — that can make the browser add a
+// Cache-Control header, which triggers a CORS preflight the Worker rejects).
+// Cache is busted by the ?ts=<now> query param alone — a fresh URL every call.
 async function ghGet(path) {
-  const res = await fetch(PROXY_BASE + path + '?ts=' + Date.now(), {
-    cache: 'no-store'
-  });
+  const res = await fetch(PROXY_BASE + path + '?ts=' + Date.now());
   if (!res.ok) throw new Error('Proxy GET ' + path + ' failed: ' + res.status);
   return res.json();   // { content, sha, ... }  — Worker passes GitHub native shape
 }
