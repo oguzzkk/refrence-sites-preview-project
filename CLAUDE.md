@@ -272,23 +272,14 @@ Embedded in `Womens_Wear_Reference_Sites.html` as `const GH_TOKEN`. It is **publ
 
 Şu an gerek görülmeyen ama ileride faydalı olabilecek iyileştirmeler. Karar verilmedi, sadece belgelendi. Bir gün biri (sen veya yeni bir oturum) "şu yapılsa nasıl olur?" diye sorduğunda buradan başlasın.
 
-### Cloudflare Worker proxy (token gizleme + origin check)
+### ~~Cloudflare Worker proxy (token gizleme + origin check)~~ ✅ DONE (2026-05-20)
 
-**Sorun:** Token HTML'de hardcoded → view-source ile herkes görür. Sızsa scope dar (sadece bu repo'ya yazabilir) ama yine de "açık duruyor" hissi.
+Implemented. Worker URL: `https://refsites-proxy.oguzzkk.workers.dev/`. Token lives as `GITHUB_TOKEN` Secret in Cloudflare. Worker enforces `Origin: https://oguzzkk.github.io`. Worker code lives only in Cloudflare panel (not in repo) — if it ever needs editing, log into Cloudflare → Workers & Pages → refsites-proxy → Edit code.
 
-**Çözüm:** Cloudflare Worker arasına eklenir.
-```
-Browser ── (Origin: oguzzkk.github.io) ──→ Worker (token Secret) ──→ GitHub
-```
-
-- Token Worker'da `Secret` olarak gizli, sayfada YOK
-- Worker `Origin` veya `Referer` kontrol eder → sadece bu site'den gelen istekleri kabul
-- Browser CORS kuralı gereği Origin header'ı spoof edilemez → kötü adam Worker URL'ini bulsa bile başka bir siteden istek atamaz
-- Token rotasyonu: sayfayı hiç değiştirmeden, sadece Worker Secret update edilir
-
-**Maliyet:** 30 dk setup. Cloudflare free tier'ı 100k istek/gün — fazlasıyla yeter.
-
-**Ne zaman değer:** Token sızıntısı yaşandığında, kullanıcı sayısı 2'den fazlaya çıktığında, veya rate limit önemli olduğunda.
+**If the token needs rotation (1 year):**
+1. GitHub → Settings → Personal access tokens → revoke old + create new (same scope: Contents read+write, only this repo)
+2. Cloudflare → Worker → Settings → Variables and Secrets → edit `GITHUB_TOKEN` → paste new value → Save and deploy
+3. HTML never changes
 
 ### Custom domain
 
