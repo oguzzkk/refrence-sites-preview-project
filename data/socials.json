@@ -838,5 +838,17 @@
   "KNTLGY (Knitology)": {
     "ig": "knitologysociety",
     "tt": "kntlgy"
+  },
+  "The Dark Store": {
+    "ig": "thedarkstore",
+    "tt": null
+  },
+  "Ro Rox": {
+    "ig": "roroxboutique",
+    "tt": "roroxboutique"
+  },
+  "The Sleeper": {
+    "ig": "daily_sleeper",
+    "tt": "daily_sleeper"
   }
 }
