@@ -190,7 +190,7 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 <div class="site-grid" id="grid">
 
 <!-- MINIMAL / EDITORIAL -->
-<a href="https://www.zara.com" target="_blank" class="site-card" data-tags="minimal fast" data-instagram="zara" data-tiktok="zara">
+<a href="https://www.zara.com" target="_blank" class="site-card" data-tags="minimal fast">
   <div class="brand">Zara</div><div class="cat">Fast Fashion — Spain</div>
   <div class="desc">Ultra-minimal editorial design. Black & white UI, massive photography. Your primary design reference.</div>
   <div class="url">zara.com</div>
@@ -2265,9 +2265,24 @@ function showSync(color, text) {
     '<span class="sync-dot ' + color + '"></span> ' + text;
 }
 
+// --- Socials lookup table — loaded at startup from data/socials.json ---
+// Public file (no token needed). Brand name (as shown on the card) is the
+// key; value is { ig: 'username', tt: 'username' }. Missing keys → that
+// brand shows IG/TikTok buttons as disabled. Inline data-instagram /
+// data-tiktok attributes on cards are honored as a fallback.
+let socials = {};
+async function loadSocials() {
+  try {
+    const u = 'https://raw.githubusercontent.com/oguzzkk/refrence-sites-preview-project/main/data/socials.json?ts=' + Date.now();
+    const res = await fetch(u);
+    if (res.ok) socials = await res.json();
+  } catch(e) { /* keep empty, modal will fall back to inline attrs */ }
+}
+
 // --- Social links modal — opens when a card is clicked ---
-// Pulls web URL from the card's href, plus optional data-instagram and
-// data-tiktok attributes. Missing socials show as disabled buttons.
+// Pulls web URL from the card's href. IG/TikTok come first from
+// socials[brand] (JSON), then fall back to data-instagram/data-tiktok
+// (inline attributes), then null (button shows as disabled).
 function initSocialModal() {
   const modal    = document.getElementById('socialModal');
   const closeBtn = document.getElementById('socialModalClose');
@@ -2321,8 +2336,9 @@ function initSocialModal() {
       const brand = card.querySelector('.brand').textContent.trim();
       const cat   = card.querySelector('.cat') ? card.querySelector('.cat').textContent.trim() : '';
       const web   = card.getAttribute('href');
-      const ig    = card.dataset.instagram || null;
-      const tt    = card.dataset.tiktok || null;
+      const s     = socials[brand] || {};
+      const ig    = s.ig || card.dataset.instagram || null;
+      const tt    = s.tt || card.dataset.tiktok || null;
       openModal(brand, cat, web, ig, tt);
     });
   });
@@ -2331,6 +2347,7 @@ function initSocialModal() {
 // --- Init on page load ---
 window.addEventListener('DOMContentLoaded', async function() {
   initHearts();
+  await loadSocials();
   initSocialModal();
   await loadTrash();
   await loadFavorites();

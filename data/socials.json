@@ -1,0 +1,578 @@
+{
+  "Zara": {
+    "ig": "zara",
+    "tt": "zara"
+  },
+  "COS": {
+    "ig": "cosstores",
+    "tt": "cosstores"
+  },
+  "Toteme": {
+    "ig": "toteme",
+    "tt": "toteme"
+  },
+  "Sezane": {
+    "ig": "sezane",
+    "tt": "sezane"
+  },
+  "Calvin Klein": {
+    "ig": "calvinklein",
+    "tt": "calvinklein"
+  },
+  "Khy": {
+    "ig": "khy",
+    "tt": "khy"
+  },
+  "Gucci": {
+    "ig": "gucci",
+    "tt": "gucci"
+  },
+  "Dior": {
+    "ig": "dior",
+    "tt": "dior"
+  },
+  "Bottega Veneta": {
+    "ig": "bottegaveneta",
+    "tt": "bottegaveneta"
+  },
+  "Louis Vuitton": {
+    "ig": "louisvuitton",
+    "tt": "louisvuitton"
+  },
+  "Oscar de la Renta": {
+    "ig": "oscardelarenta",
+    "tt": "oscardelarenta"
+  },
+  "Stella McCartney": {
+    "ig": "stellamccartney",
+    "tt": "stellamccartney"
+  },
+  "Galia Lahav": {
+    "ig": "galialahav",
+    "tt": "galialahav"
+  },
+  "Loewe": {
+    "ig": "loewe",
+    "tt": "loewe"
+  },
+  "Alaia": {
+    "ig": "maisonalaia",
+    "tt": "maisonalaia"
+  },
+  "Jacquemus": {
+    "ig": "jacquemus",
+    "tt": "jacquemus"
+  },
+  "Isabel Marant": {
+    "ig": "isabelmarant",
+    "tt": "isabelmarant"
+  },
+  "Khaite": {
+    "ig": "khaite",
+    "tt": "khaite"
+  },
+  "Rixo": {
+    "ig": "rixo",
+    "tt": null
+  },
+  "Victoria Beckham": {
+    "ig": "victoriabeckham",
+    "tt": "victoriabeckham"
+  },
+  "Maison Margiela": {
+    "ig": "maisonmargiela",
+    "tt": "maisonmargiela"
+  },
+  "Vivienne Westwood": {
+    "ig": "viviennewestwood",
+    "tt": "viviennewestwood"
+  },
+  "Miu Miu": {
+    "ig": "miumiu",
+    "tt": "miumiu"
+  },
+  "Marni": {
+    "ig": "marni",
+    "tt": "marni"
+  },
+  "Balmain": {
+    "ig": "balmain",
+    "tt": "balmain"
+  },
+  "Polene": {
+    "ig": "polene_paris",
+    "tt": "polene_paris"
+  },
+  "Versace": {
+    "ig": "versace",
+    "tt": "versace"
+  },
+  "Valentino": {
+    "ig": "maisonvalentino",
+    "tt": "maisonvalentino"
+  },
+  "Givenchy": {
+    "ig": "givenchy",
+    "tt": "givenchy"
+  },
+  "Balenciaga": {
+    "ig": "balenciaga",
+    "tt": "balenciaga"
+  },
+  "Celine": {
+    "ig": "celine",
+    "tt": "celine"
+  },
+  "The Kooples": {
+    "ig": "thekooples",
+    "tt": "thekooples"
+  },
+  "H&M": {
+    "ig": "hm",
+    "tt": "hm"
+  },
+  "ASOS": {
+    "ig": "asos",
+    "tt": "asos"
+  },
+  "Mango": {
+    "ig": "mango",
+    "tt": "mango"
+  },
+  "Uniqlo": {
+    "ig": "uniqlo",
+    "tt": "uniqlo"
+  },
+  "Massimo Dutti": {
+    "ig": "massimodutti",
+    "tt": "massimodutti"
+  },
+  "Boohoo": {
+    "ig": "boohoo",
+    "tt": "boohoo"
+  },
+  "PrettyLittleThing": {
+    "ig": "prettylittlething",
+    "tt": "prettylittlething"
+  },
+  "Fashion Nova (Fast)": {
+    "ig": "fashionnova",
+    "tt": "fashionnova"
+  },
+  "Fashion Nova": {
+    "ig": "fashionnova",
+    "tt": "fashionnova"
+  },
+  "Temu": {
+    "ig": "temu",
+    "tt": "temu"
+  },
+  "Trendyol": {
+    "ig": "trendyol",
+    "tt": "trendyolofficial"
+  },
+  "Bershka": {
+    "ig": "bershka",
+    "tt": "bershka"
+  },
+  "Pull & Bear": {
+    "ig": "pullandbear",
+    "tt": "pullandbear"
+  },
+  "Stradivarius": {
+    "ig": "stradivarius",
+    "tt": "stradivarius"
+  },
+  "New Look": {
+    "ig": "newlook",
+    "tt": "newlook"
+  },
+  "River Island": {
+    "ig": "riverisland",
+    "tt": "riverisland"
+  },
+  "Forever 21": {
+    "ig": "forever21",
+    "tt": "forever21"
+  },
+  "YesStyle": {
+    "ig": "yesstyle",
+    "tt": "yesstyle"
+  },
+  "Beginning Boutique": {
+    "ig": "beginningboutique",
+    "tt": "beginningboutique"
+  },
+  "Everlane": {
+    "ig": "everlane",
+    "tt": "everlane"
+  },
+  "Reformation": {
+    "ig": "reformation",
+    "tt": "reformation"
+  },
+  "Mejuri": {
+    "ig": "mejuri",
+    "tt": "mejuri"
+  },
+  "Good American": {
+    "ig": "goodamerican",
+    "tt": "goodamerican"
+  },
+  "Rebecca Minkoff": {
+    "ig": "rebeccaminkoff",
+    "tt": "rebeccaminkoff"
+  },
+  "Pangaia": {
+    "ig": "thepangaia",
+    "tt": "thepangaia"
+  },
+  "Motel Rocks": {
+    "ig": "motelrocks",
+    "tt": "motelrocks"
+  },
+  "Wolf & Badger": {
+    "ig": "wolfandbadger",
+    "tt": "wolfandbadger"
+  },
+  "Nordstrom": {
+    "ig": "nordstrom",
+    "tt": "nordstrom"
+  },
+  "Aritzia": {
+    "ig": "aritzia",
+    "tt": "aritzia"
+  },
+  "Revolve": {
+    "ig": "revolve",
+    "tt": "revolve"
+  },
+  "Anthropologie": {
+    "ig": "anthropologie",
+    "tt": "anthropologie"
+  },
+  "Free People": {
+    "ig": "freepeople",
+    "tt": "freepeople"
+  },
+  "Madewell": {
+    "ig": "madewell",
+    "tt": "madewell"
+  },
+  "Athleta": {
+    "ig": "athleta",
+    "tt": "athleta"
+  },
+  "Abercrombie & Fitch": {
+    "ig": "abercrombie",
+    "tt": "abercrombie"
+  },
+  "Princess Polly": {
+    "ig": "princesspollyboutique",
+    "tt": "princesspolly"
+  },
+  "Net-a-Porter": {
+    "ig": "netaporter",
+    "tt": "netaporter"
+  },
+  "The Row": {
+    "ig": "therow_",
+    "tt": null
+  },
+  "Acne Studios": {
+    "ig": "acnestudios",
+    "tt": "acnestudios"
+  },
+  "Filippa K": {
+    "ig": "filippa_k",
+    "tt": "filippa_k"
+  },
+  "& Other Stories": {
+    "ig": "andotherstories",
+    "tt": "andotherstories"
+  },
+  "Rouje": {
+    "ig": "rouje",
+    "tt": "rouje"
+  },
+  "Nanushka": {
+    "ig": "nanushka",
+    "tt": null
+  },
+  "Ganni": {
+    "ig": "ganni",
+    "tt": "ganni"
+  },
+  "Skims": {
+    "ig": "skims",
+    "tt": "skims"
+  },
+  "Killstar": {
+    "ig": "killstar",
+    "tt": "killstar"
+  },
+  "Dolls Kill": {
+    "ig": "dollskill",
+    "tt": "dollskill"
+  },
+  "Midnight Hour": {
+    "ig": "midnighthour",
+    "tt": "midnighthour"
+  },
+  "Midnight Hour (Witchy)": {
+    "ig": "midnighthour",
+    "tt": "midnighthour"
+  },
+  "BlackMilk Clothing": {
+    "ig": "blackmilkclothing",
+    "tt": "blackmilkclothing"
+  },
+  "Unique Vintage": {
+    "ig": "unique_vintage",
+    "tt": "uniquevintage"
+  },
+  "Impericon": {
+    "ig": "impericon",
+    "tt": "impericon"
+  },
+  "Hot Topic": {
+    "ig": "hottopic",
+    "tt": "hottopic"
+  },
+  "Rosegal (Dark)": {
+    "ig": "rosegal",
+    "tt": "rosegal"
+  },
+  "Rick Owens": {
+    "ig": "rickowensonline",
+    "tt": null
+  },
+  "Ann Demeulemeester": {
+    "ig": "anndemeulemeester",
+    "tt": null
+  },
+  "Alexander McQueen": {
+    "ig": "alexandermcqueen",
+    "tt": "alexandermcqueen"
+  },
+  "SSENSE": {
+    "ig": "ssense",
+    "tt": "ssense"
+  },
+  "Koton": {
+    "ig": "koton",
+    "tt": "koton"
+  },
+  "LC Waikiki": {
+    "ig": "lcwaikiki",
+    "tt": "lcwaikiki"
+  },
+  "DeFacto": {
+    "ig": "defacto",
+    "tt": "defacto"
+  },
+  "Mavi": {
+    "ig": "mavi",
+    "tt": "mavi"
+  },
+  "Boyner": {
+    "ig": "boyner",
+    "tt": "boyner"
+  },
+  "Vakko": {
+    "ig": "vakko",
+    "tt": "vakko"
+  },
+  "Beymen": {
+    "ig": "beymen",
+    "tt": "beymen"
+  },
+  "Ipekyol": {
+    "ig": "ipekyol",
+    "tt": "ipekyolofficial"
+  },
+  "Network": {
+    "ig": "networkmoda",
+    "tt": "networkmoda"
+  },
+  "Machka": {
+    "ig": "machkamoda",
+    "tt": "machkamoda"
+  },
+  "Addax": {
+    "ig": "addaxofficial",
+    "tt": "addaxofficial"
+  },
+  "Nocturne": {
+    "ig": "nocturne",
+    "tt": "nocturne"
+  },
+  "Twist": {
+    "ig": "twistofficial",
+    "tt": "twistofficial"
+  },
+  "Yargici": {
+    "ig": "yargici",
+    "tt": "yargici"
+  },
+  "Gizia": {
+    "ig": "gizia",
+    "tt": "gizia"
+  },
+  "Les Benjamins": {
+    "ig": "lesbenjamins",
+    "tt": "lesbenjamins"
+  },
+  "Modanisa": {
+    "ig": "modanisa",
+    "tt": "modanisa"
+  },
+  "Mudo": {
+    "ig": "mudo",
+    "tt": "mudo"
+  },
+  "ModCloth": {
+    "ig": "modcloth",
+    "tt": "modcloth"
+  },
+  "Selkie": {
+    "ig": "selkiecollection",
+    "tt": "selkie"
+  },
+  "Christy Dawn": {
+    "ig": "christydawn",
+    "tt": "christydawn"
+  },
+  "Olive Clothing": {
+    "ig": "oliveclothing",
+    "tt": null
+  },
+  "Cecilie Bahnsen": {
+    "ig": "ceciliebahnsen",
+    "tt": null
+  },
+  "Romwe": {
+    "ig": "romwe",
+    "tt": "romwe"
+  },
+  "Chi Chi London": {
+    "ig": "chichilondon",
+    "tt": null
+  },
+  "Missy Empire": {
+    "ig": "missyempire",
+    "tt": "missyempire"
+  },
+  "LEWKIN": {
+    "ig": "lewkin_official",
+    "tt": null
+  },
+  "Quiz": {
+    "ig": "quizclothing",
+    "tt": "quizclothing"
+  },
+  "Kotn": {
+    "ig": "kotn",
+    "tt": "kotn"
+  },
+  "Miss Lola": {
+    "ig": "misslola",
+    "tt": null
+  },
+  "Minga London": {
+    "ig": "mingalondon",
+    "tt": "mingalondon"
+  },
+  "Pink Lily": {
+    "ig": "pinklilystyle",
+    "tt": "pinklilystyle"
+  },
+  "Soi Paris": {
+    "ig": "soiparis",
+    "tt": null
+  },
+  "Matches Fashion": {
+    "ig": "matchesfashion",
+    "tt": null
+  },
+  "Arket": {
+    "ig": "arketofficial",
+    "tt": "arketofficial"
+  },
+  "Disturbia": {
+    "ig": "disturbiaclothing",
+    "tt": "disturbiaclothing"
+  },
+  "Tragic Beautiful": {
+    "ig": "tragicbeautiful",
+    "tt": null
+  },
+  "Devil Inspired": {
+    "ig": "devilinspired",
+    "tt": null
+  },
+  "Joanie Clothing": {
+    "ig": "joanieclothing",
+    "tt": "joanieclothing"
+  },
+  "Joanie Clothing (Victorian)": {
+    "ig": "joanieclothing",
+    "tt": "joanieclothing"
+  },
+  "OXXO": {
+    "ig": "oxxofashion",
+    "tt": null
+  },
+  "Dilvin": {
+    "ig": "dilvinjeans",
+    "tt": null
+  },
+  "Roman": {
+    "ig": "romanofficial",
+    "tt": "romanofficial"
+  },
+  "Perspective": {
+    "ig": "perspectivefashion",
+    "tt": null
+  },
+  "adL (Adil Isik)": {
+    "ig": "adloriginal",
+    "tt": null
+  },
+  "Doen": {
+    "ig": "shopdoen",
+    "tt": "shopdoen"
+  },
+  "Arzu Kaprol": {
+    "ig": "arzukaprol",
+    "tt": null
+  },
+  "Raisa Vanessa": {
+    "ig": "raisavanessa",
+    "tt": "raisavanessa"
+  },
+  "Dilek Hanif": {
+    "ig": "dilekhanif",
+    "tt": null
+  },
+  "Sefamerve": {
+    "ig": "sefamerve",
+    "tt": "sefamerve"
+  },
+  "Batsheva (Victorian)": {
+    "ig": "batshevadress",
+    "tt": null
+  },
+  "Needle & Thread (Victorian)": {
+    "ig": "needleandthreadlondon",
+    "tt": "needleandthreadlondon"
+  },
+  "Simone Rocha (Victorian)": {
+    "ig": "simone_rocha_",
+    "tt": null
+  },
+  "Nackiye": {
+    "ig": "nackiyestudio",
+    "tt": null
+  }
+}
