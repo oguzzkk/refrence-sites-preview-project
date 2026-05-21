@@ -2335,10 +2335,17 @@ function initSocialModal() {
       e.preventDefault();
       const brand = card.querySelector('.brand').textContent.trim();
       const cat   = card.querySelector('.cat') ? card.querySelector('.cat').textContent.trim() : '';
-      const web   = card.getAttribute('href');
-      const s     = socials[brand] || {};
-      const ig    = s.ig || card.dataset.instagram || null;
-      const tt    = s.tt || card.dataset.tiktok || null;
+      const rawHref = card.getAttribute('href');
+      // IG-only boutiques: card's href points at instagram.com/<handle>.
+      // In that case there is no real "web" — treat the href as the IG link
+      // and extract the handle for the Instagram button.
+      let web = rawHref;
+      let igFromHref = null;
+      const igMatch = rawHref && rawHref.match(/^https?:\/\/(?:www\.)?instagram\.com\/([A-Za-z0-9_.]+)/i);
+      if (igMatch) { igFromHref = igMatch[1]; web = null; }
+      const s = socials[brand] || {};
+      const ig = s.ig || igFromHref || card.dataset.instagram || null;
+      const tt = s.tt || card.dataset.tiktok || null;
       openModal(brand, cat, web, ig, tt);
     });
   });
