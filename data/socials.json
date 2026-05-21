@@ -850,5 +850,9 @@
   "The Sleeper": {
     "ig": "daily_sleeper",
     "tt": "daily_sleeper"
+  },
+  "Labbeye": {
+    "ig": "labbeye",
+    "tt": "labbeye"
   }
 }
