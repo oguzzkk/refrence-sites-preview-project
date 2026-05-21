@@ -108,6 +108,47 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 
 .note { text-align: center; padding: 40px; color: #888; font-size: 0.85em; border-top: 1px solid #eee; margin-top: 32px; }
 
+/* Social links modal — opens when a card is clicked */
+.social-modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,10,10,0.78);
+  display: none; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px; backdrop-filter: blur(2px);
+}
+.social-modal-overlay.open { display: flex; }
+.social-modal {
+  background: #fff; border: 1px solid #111; max-width: 420px; width: 100%;
+  padding: 36px 32px 28px; position: relative; font-family: 'Inter', sans-serif;
+}
+.social-modal-close {
+  position: absolute; top: 10px; right: 12px; background: none; border: none;
+  font-size: 1.4em; line-height: 1; color: #888; cursor: pointer; padding: 6px;
+}
+.social-modal-close:hover { color: #111; }
+.social-modal-brand {
+  font-size: 1.1em; letter-spacing: 4px; text-transform: uppercase; font-weight: 500;
+  color: #111; margin-bottom: 4px;
+}
+.social-modal-cat {
+  font-size: 0.7em; letter-spacing: 1.5px; text-transform: uppercase; color: #888;
+  margin-bottom: 24px;
+}
+.social-modal-links { display: flex; flex-direction: column; gap: 8px; }
+.social-modal-btn {
+  display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+  border: 1px solid #ddd; text-decoration: none; color: #111;
+  font-size: 0.8em; letter-spacing: 2px; text-transform: uppercase; font-weight: 400;
+  transition: 0.2s; background: #fff;
+}
+.social-modal-btn:hover { border-color: #111; background: #111; color: #fff; }
+.social-modal-btn .icon { font-size: 1.1em; line-height: 1; min-width: 20px; }
+.social-modal-btn .label { flex: 1; }
+.social-modal-btn .handle { font-size: 0.85em; color: #888; letter-spacing: 1px; text-transform: none; }
+.social-modal-btn:hover .handle { color: #ccc; }
+.social-modal-btn.disabled {
+  border-color: #eee; color: #ccc; cursor: not-allowed; pointer-events: none;
+}
+.social-modal-btn.disabled .label::after { content: ' — yok'; color: #ccc; }
+
 @media (max-width: 600px) {
   /* Let auto-fill decide column count below 600px — it will do 2 cols if room, 1 col otherwise */
   .filter-bar { gap: 6px; }
@@ -149,7 +190,7 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 <div class="site-grid" id="grid">
 
 <!-- MINIMAL / EDITORIAL -->
-<a href="https://www.zara.com" target="_blank" class="site-card" data-tags="minimal fast">
+<a href="https://www.zara.com" target="_blank" class="site-card" data-tags="minimal fast" data-instagram="zara" data-tiktok="zara">
   <div class="brand">Zara</div><div class="cat">Fast Fashion — Spain</div>
   <div class="desc">Ultra-minimal editorial design. Black & white UI, massive photography. Your primary design reference.</div>
   <div class="url">zara.com</div>
@@ -1754,6 +1795,26 @@ body { font-family: 'Inter', sans-serif; color: #333; background: #fff; }
 
 </div>
 
+<!-- Social links modal — populated by JS when a card is clicked -->
+<div class="social-modal-overlay" id="socialModal" aria-hidden="true">
+  <div class="social-modal" role="dialog" aria-labelledby="socialModalBrand">
+    <button class="social-modal-close" id="socialModalClose" aria-label="Kapat">&times;</button>
+    <div class="social-modal-brand" id="socialModalBrand"></div>
+    <div class="social-modal-cat" id="socialModalCat"></div>
+    <div class="social-modal-links">
+      <a class="social-modal-btn" id="socialBtnWeb"     target="_blank" rel="noopener">
+        <span class="icon">&#127760;</span><span class="label">Web</span><span class="handle"></span>
+      </a>
+      <a class="social-modal-btn" id="socialBtnIg"      target="_blank" rel="noopener">
+        <span class="icon">&#9737;</span><span class="label">Instagram</span><span class="handle"></span>
+      </a>
+      <a class="social-modal-btn" id="socialBtnTt"      target="_blank" rel="noopener">
+        <span class="icon">&#9836;</span><span class="label">TikTok</span><span class="handle"></span>
+      </a>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== SHARED FAVORITES SYSTEM — via Cloudflare Worker proxy =====
 // Storage: data/favorites.json + data/trash.json in this repo. Writes go
@@ -2204,9 +2265,73 @@ function showSync(color, text) {
     '<span class="sync-dot ' + color + '"></span> ' + text;
 }
 
+// --- Social links modal — opens when a card is clicked ---
+// Pulls web URL from the card's href, plus optional data-instagram and
+// data-tiktok attributes. Missing socials show as disabled buttons.
+function initSocialModal() {
+  const modal    = document.getElementById('socialModal');
+  const closeBtn = document.getElementById('socialModalClose');
+  const brandEl  = document.getElementById('socialModalBrand');
+  const catEl    = document.getElementById('socialModalCat');
+  const webBtn   = document.getElementById('socialBtnWeb');
+  const igBtn    = document.getElementById('socialBtnIg');
+  const ttBtn    = document.getElementById('socialBtnTt');
+
+  function setBtn(btn, url, handle) {
+    if (url) {
+      btn.href = url;
+      btn.querySelector('.handle').textContent = handle || '';
+      btn.classList.remove('disabled');
+    } else {
+      btn.href = '#';
+      btn.querySelector('.handle').textContent = '';
+      btn.classList.add('disabled');
+    }
+  }
+
+  function openModal(brand, cat, web, ig, tt) {
+    brandEl.textContent = brand;
+    catEl.textContent   = cat;
+    setBtn(webBtn, web, web ? web.replace(/^https?:\/\//, '').replace(/\/$/, '') : null);
+    setBtn(igBtn,  ig  ? 'https://instagram.com/' + ig         : null, ig ? '@' + ig : null);
+    setBtn(ttBtn,  tt  ? 'https://www.tiktok.com/@' + tt       : null, tt ? '@' + tt : null);
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closeModal();   // overlay click closes
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  });
+
+  document.querySelectorAll('.site-card').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+      // Defensive: ignore clicks that bubbled from interactive children.
+      // (Heart/trash/note already stopPropagation, this is a safety net.)
+      if (e.target.closest('.fav-btn, .trash-btn-inline, .fav-note-wrap')) return;
+      e.preventDefault();
+      const brand = card.querySelector('.brand').textContent.trim();
+      const cat   = card.querySelector('.cat') ? card.querySelector('.cat').textContent.trim() : '';
+      const web   = card.getAttribute('href');
+      const ig    = card.dataset.instagram || null;
+      const tt    = card.dataset.tiktok || null;
+      openModal(brand, cat, web, ig, tt);
+    });
+  });
+}
+
 // --- Init on page load ---
 window.addEventListener('DOMContentLoaded', async function() {
   initHearts();
+  initSocialModal();
   await loadTrash();
   await loadFavorites();
 
